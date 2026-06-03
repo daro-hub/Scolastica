@@ -52,7 +52,7 @@ async def check_password(request, call_next):
 
     path = request.url.path
     public_paths = ('/health', '/docs', '/openapi.json')
-    static_prefixes = ('/_next/', '/static-assets/', '/thumbnails/')
+    static_prefixes = ('/_next/', '/static-assets/', '/thumbnails/', '/download/')
     static_extensions = ('.html', '.js', '.css', '.png', '.svg', '.ico', '.txt', '.json', '.woff', '.woff2')
 
     if path in public_paths:
