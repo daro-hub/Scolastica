@@ -397,7 +397,7 @@ export default function Home() {
                   sections={sections}
                   selectedVariants={selectedVariants}
                   onSelect={selectVariant}
-                  apiBase={process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}
+                  apiBase=""
                 />
               ) : (
                 <EmptyState
