@@ -28,8 +28,8 @@ export function PasswordGate({ children }: { children: React.ReactNode }) {
 
   async function verifyPassword(pw: string): Promise<boolean> {
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-      const res = await fetch(`${apiBase}/health`, {
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || ''
+      const res = await fetch(`${apiBase}/auth/check`, {
         headers: { 'x-app-password': pw }
       })
       return res.ok

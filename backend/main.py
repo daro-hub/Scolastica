@@ -576,8 +576,14 @@ async def serve_thumbnail(gen_id: str, filename: str):
 
 @app.get('/health')
 async def health_check():
-    """Health check endpoint."""
+    """Health check endpoint (public, no auth)."""
     return {'status': 'ok', 'version': '2.0.0'}
+
+
+@app.get('/auth/check')
+async def auth_check():
+    """Password verification endpoint (protected by middleware)."""
+    return {'authenticated': True}
 
 
 # --- Static frontend serving (for production Docker deploy) ---
