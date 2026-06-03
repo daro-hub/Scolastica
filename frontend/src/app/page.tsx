@@ -131,7 +131,12 @@ export default function Home() {
       setGenerationStatus('building')
       setProgress({ percent: 80, message: 'Costruzione file finale...' })
 
-      const url = await buildFinal(generationId)
+      const selectionsAsStrings: Record<string, string> = {}
+      for (const [k, v] of Object.entries(selectedVariants)) {
+        selectionsAsStrings[String(k)] = String(v)
+      }
+
+      const url = await buildFinal(generationId, selectionsAsStrings)
 
       setOutputUrl(url)
       setGenerationStatus('complete')
