@@ -14,8 +14,6 @@ Legacy endpoints (preserved for backward compat):
 - POST /process
 - GET /download/{result_id}
 """
-from __future__ import annotations
-
 import os
 from pathlib import Path
 from typing import List, Optional
