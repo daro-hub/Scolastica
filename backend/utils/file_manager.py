@@ -2,9 +2,12 @@
 File manager utility for handling uploaded files and generated outputs.
 Stores files temporarily in memory/disk and provides retrieval.
 """
+from __future__ import annotations
+
 import os
 import uuid
 from pathlib import Path
+from typing import Optional
 
 UPLOAD_DIR = Path(__file__).parent.parent / 'uploads'
 OUTPUT_DIR = Path(__file__).parent.parent / 'outputs'
@@ -34,14 +37,17 @@ def get_upload_path(file_id: str) -> Path | None:
     return None
 
 
-def save_output(content: bytes, original_name: str, extension: str) -> dict:
+def save_output(content: bytes | str, original_name: str, extension: str) -> dict:
     """
     Save generated output and return metadata.
     """
     output_id = str(uuid.uuid4())
     filename = f'{Path(original_name).stem}_{output_id[:8]}{extension}'
     file_path = OUTPUT_DIR / filename
-    file_path.write_bytes(content)
+    if isinstance(content, str):
+        file_path.write_text(content, encoding='utf-8')
+    else:
+        file_path.write_bytes(content)
     return {
         'id': output_id,
         'filename': filename,

@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "skills": {
+    "adapt": {
+      "source": "bgausden/impeccable",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/adapt/SKILL.md",
+      "computedHash": "5dc740cae7b8cfa06a33c00f1069b4626835c3e3af9a5e789ddcfca4f220399a"
+    },
+    "animate": {
+      "source": "bgausden/impeccable",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/animate/SKILL.md",
+      "computedHash": "ce9e831817bb9396cb89978150c62e29a624ee8b7b307afbf29ef1a000515a8e"
+    },
+    "arrange": {
+      "source": "bgausden/impeccable",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/arrange/SKILL.md",
+      "computedHash": "63e120ef19997a74de79354d17db3334557292f2f7e085127cc7f820be3ca1a6"
+    },
+    "audit": {
+      "source": "bgausden/impeccable",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/audit/SKILL.md",
+      "computedHash": "7c587c09abfa035acfb7270ca9567933f1d7e7b204fb17e0a71468ac6561795c"
+    },
+    "bolder": {
+      "source": "bgausden/impeccable",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/bolder/SKILL.md",
+      "computedHash": "bb749794498ba62cdd801d02e8a400c61b85921bfdc708e5ffca7fd332946b2a"
+    },
+    "clarify": {
+      "source": "bgausden/impeccable",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/clarify/SKILL.md",
+      "computedHash": "fa2c6aad239b31b4bc9ab5ceff25cf59502906b821db982b40fa9ec2b828a8be"
+    },
+    "colorize": {
+      "source": "bgausden/impeccable",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/colorize/SKILL.md",
+      "computedHash": "ec52f781ad7c41f1df681405c87241b06eff773984e6017ec93fbf29a9034929"
+    },
+    "critique": {
+      "source": "bgausden/impeccable",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/critique/SKILL.md",
+      "computedHash": "96b7860b90463091c4c79bb8397a43dbb7d1522f2818bcdb2d69cdf9f1af78e5"
+    },
+    "delight": {
+      "source": "bgausden/impeccable",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/delight/SKILL.md",
+      "computedHash": "64c0dcf27ad99c24bc9add03a63f12e8bc56a59be1cc29528076a61f89b0037f"
+    },
+    "distill": {
+      "source": "bgausden/impeccable",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/distill/SKILL.md",
+      "computedHash": "96c6b864a660d962d3b36d5c1d7c105309dc81de116e3ef012c25f76023face7"
+    },
+    "extract": {
+      "source": "bgausden/impeccable",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/extract/SKILL.md",
+      "computedHash": "ed112b2950740fa86c3c8657ab29542b4917cfbbdaaa787be001617fe9523433"
+    },
+    "frontend-design": {
+      "source": "bgausden/impeccable",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/frontend-design/SKILL.md",
+      "computedHash": "f8ecd3028ae60e1b710a9e1c13a43ddfb3a9d4bf67df99209a1855297c1ea2bd"
+    },
+    "harden": {
+      "source": "bgausden/impeccable",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/harden/SKILL.md",
+      "computedHash": "7ed7888f7a3ea96e628d6c8a524b3bfb2d23d43fa438b792d3f1280d95dc2e71"
+    },
+    "normalize": {
+      "source": "bgausden/impeccable",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/normalize/SKILL.md",
+      "computedHash": "39c1999d7726cff95796fa88eb303eca007b5be316afb2d9e14e5176e6b96a3e"
+    },
+    "onboard": {
+      "source": "bgausden/impeccable",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/onboard/SKILL.md",
+      "computedHash": "3b9a33daf02efa21b051efdaa0667faa79b93439e2d0750ec3d5997f774a8afc"
+    },
+    "optimize": {
+      "source": "bgausden/impeccable",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/optimize/SKILL.md",
+      "computedHash": "f09db657c8039e08fdd0d8121a92f0a9dac57ecc4b6006fa2c5b844dbd11b8c5"
+    },
+    "overdrive": {
+      "source": "bgausden/impeccable",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/overdrive/SKILL.md",
+      "computedHash": "7615bb4651a3d77b4424efab3c6453893783a32040ae7fb05485076fdd5d2076"
+    },
+    "polish": {
+      "source": "bgausden/impeccable",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/polish/SKILL.md",
+      "computedHash": "e4848b93ad609731f5ec69529915499aedea7a93f304a92472783baac4276cea"
+    },
+    "quieter": {
+      "source": "bgausden/impeccable",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/quieter/SKILL.md",
+      "computedHash": "9246b13fc6fe04eb583baa9cf54890b757191dfad8a5ccafaf0dcc1ae0dc2518"
+    },
+    "teach-impeccable": {
+      "source": "bgausden/impeccable",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/teach-impeccable/SKILL.md",
+      "computedHash": "b3b5541bb9b0a260af793c7d79c2db4a436c2cd9384be34a4024c7f28af72e62"
+    },
+    "typeset": {
+      "source": "bgausden/impeccable",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/typeset/SKILL.md",
+      "computedHash": "bd6e0262648170c6d23101dcdeea055ebd6852f57d89e1fd10ac1627a2bf69f0"
+    }
+  }
+}

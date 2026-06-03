@@ -1,132 +1,87 @@
 # Scolastica
 
-MVP web application for automating content creator workflows using external AI services.
+Piattaforma web per automatizzare la creazione di contenuti educativi (PowerPoint, sottotitoli, quiz, mappe interattive) a partire da documenti sorgente, con AI che genera varianti multiple e l'operatore sceglie la migliore.
 
-## Architecture
+## Architettura
 
-- **Frontend**: Next.js (App Router)
-- **Backend**: FastAPI (Python)
-- **External APIs**: AssemblyAI (transcription), Gamma (presentations)
+```
+scolastica/
+├── backend/          # FastAPI (Python) - deploy su Vercel Functions
+│   ├── main.py       # Endpoint API (v1 legacy + v2 variant-based)
+│   ├── services/
+│   │   ├── pptx_service.py      # PowerPoint: analisi master + generazione varianti via Claude + build
+│   │   ├── getty_service.py      # Ricerca immagini Getty/Unsplash
+│   │   ├── assemblyai_service.py # Trascrizione audio/video
+│   │   ├── content_service.py    # Quiz/Padlet/ThingLink via Claude
+│   │   ├── gamma_service.py      # Legacy: Gamma API presentations
+│   │   └── map_service.py        # Mappe interattive (post-processing)
+│   └── utils/
+│       └── file_manager.py
+│
+└── frontend/         # Next.js 14 + Tailwind + shadcn/ui - deploy su Vercel
+    └── src/
+        ├── app/          # App Router pages
+        ├── components/   # UI components (wizard, variant selector, image picker)
+        ├── lib/          # API client + utilities
+        └── store/        # Zustand state management
+```
 
-## Features
+## Workflow principale (Presentations v2)
 
-| Task | Input | Output | API |
-|------|-------|--------|-----|
-| Subtitles | Audio/Video | .srt | AssemblyAI |
-| Karaoke | Audio/Video | .srt (with speakers) | AssemblyAI |
-| Presentations | PDF/DOCX | .pptx | Gamma |
-| Interactive Maps | PDF/DOCX | .pptx | Gamma |
-| Quiz | PDF/DOCX | .html | OpenAI |
-| Padlet | PDF/DOCX | .html | OpenAI |
-| ThingLink | PDF/DOCX | .html | OpenAI |
+1. **Upload**: operatore carica PDF sorgente + master .pptx del cliente
+2. **Analisi**: backend analizza il master (layout, placeholder) e il contenuto del PDF
+3. **Generazione varianti**: Claude genera 5 proposte per ogni sezione, usando solo testo tagliato dall'originale (mai rielaborato)
+4. **Selezione**: operatore sceglie la variante preferita per ogni sezione + immagini da Getty
+5. **Build**: python-pptx popola il master con le scelte dell'operatore
+6. **Export**: PPTX finale scaricabile, aderente al master del cliente
 
-## Setup
+## Setup locale
 
-### 1. Backend
+### Backend
 
 ```bash
 cd backend
-
-# Create virtual environment
 python -m venv venv
-
-# Activate (Windows)
-.\venv\Scripts\activate
-
-# Activate (macOS/Linux)
 source venv/bin/activate
-
-# Install dependencies
 pip install -r requirements.txt
-
-# Configure environment
 cp .env.example .env
-# Edit .env and add your API keys:
-# - ASSEMBLYAI_API_KEY
-# - GAMMA_API_KEY
-# - OPENAI_API_KEY
-
-# Run server
+# Compilare .env con le API keys
 uvicorn main:app --reload
 ```
 
-Backend runs at: http://localhost:8000
-
-API docs: http://localhost:8000/docs
-
-### 2. Frontend
+### Frontend
 
 ```bash
 cd frontend
-
-# Install dependencies
 npm install
-
-# Run dev server
+cp .env.example .env.local
+# Compilare .env.local
 npm run dev
 ```
 
-Frontend runs at: http://localhost:3000
+## Deploy (Vercel)
 
-## API Endpoints
+Due progetti Vercel separati:
 
-### POST /upload
-Upload files (PDF, DOCX, PPTX, MP3, WAV, MP4)
+- **Frontend**: root `frontend/`, framework Next.js (auto-detected)
+- **Backend**: root `backend/`, runtime Python (vercel.json configura routing)
 
-```bash
-curl -X POST http://localhost:8000/upload \
-  -F "files=@document.pdf"
-```
+Environment variables richieste su Vercel dashboard:
+- Frontend: `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- Backend: `ANTHROPIC_API_KEY`, `ASSEMBLYAI_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `GETTY_API_KEY` (opzionale), `UNSPLASH_ACCESS_KEY` (fallback)
 
-### POST /process
-Process uploaded files with selected task
+## Database
 
-```bash
-curl -X POST http://localhost:8000/process \
-  -H "Content-Type: application/json" \
-  -d '{"task_type": "subtitles", "file_ids": ["uuid-here"]}'
-```
+Supabase (progetto `gestionale-amuseapp`), tabelle:
+- `scolastica_projects` - progetti con master template
+- `scolastica_generations` - job di generazione con varianti e selezioni
+- `scolastica_image_usage` - tracking immagini per billing
 
-### GET /download/{result_id}
-Download generated output
+## API esterne
 
-```bash
-curl -O http://localhost:8000/download/result-uuid
-```
-
-## Environment Variables
-
-| Variable | Description |
-|----------|-------------|
-| ASSEMBLYAI_API_KEY | AssemblyAI API key for transcription |
-| GAMMA_API_KEY | Gamma API key for presentation generation |
-| OPENAI_API_KEY | OpenAI API key for Quiz/Padlet/ThingLink generation |
-
-## Project Structure
-
-```
-Scolastica/
-├── backend/
-│   ├── main.py              # FastAPI app with endpoints
-│   ├── requirements.txt     # Python dependencies
-│   ├── .env.example         # Environment template
-│   ├── services/
-│   │   ├── assemblyai_service.py  # AssemblyAI integration
-│   │   ├── gamma_service.py       # Gamma API integration
-│   │   └── content_service.py     # Quiz/Padlet/ThingLink generation
-│   └── utils/
-│       └── file_manager.py  # File upload/download handling
-└── frontend/
-    ├── package.json
-    ├── next.config.js
-    └── src/app/
-        ├── layout.js        # Root layout
-        ├── globals.css      # Global styles
-        └── page.js          # Main UI component
-```
-
-## Notes
-
-- Files are sent **as-is** to external APIs without preprocessing
-- Temporary files are stored in `backend/uploads/` and `backend/outputs/`
-- For production, implement proper file cleanup and storage
+| Servizio | Uso | Costo stimato |
+|----------|-----|---------------|
+| Claude (Anthropic) | Generazione varianti, quiz, padlet | ~$0.05-0.15 per generazione |
+| AssemblyAI | Trascrizione audio/video | ~$0.006/min |
+| Getty Images | Ricerca immagini editoriali | max 1 EUR/immagine (budget Mondadori) |
+| Unsplash | Fallback immagini free | Gratuito |

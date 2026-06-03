@@ -1,153 +1,96 @@
 import { create } from 'zustand'
+import type { SlideSection } from '@/lib/api'
 
-export type ExportFormat = 'pptx' | 'pdf'
-
-export type TaskType = 
-  | 'quiz' 
-  | 'padlet' 
-  | 'thinglink' 
-  | 'presentations' 
-  | 'maps' 
-  | 'subtitles' 
+export type TaskType =
+  | 'presentations'
+  | 'subtitles'
   | 'karaoke'
+  | 'quiz'
+  | 'padlet'
+  | 'maps'
+  | 'thinglink'
 
-export type AppState = 'idle' | 'uploading' | 'generating' | 'editing' | 'previewing'
-
-export interface UploadedFile {
-  id: string
-  file: File
-  fileId: string | null
-}
-
-export interface QuizQuestion {
-  id: string
-  type: 'true_false' | 'multiple_choice'
-  question: string
-  options?: string[]
-  correctAnswer: string | boolean | number
-}
-
-export interface PadletCard {
-  id: string
-  type: 'summary' | 'concept' | 'resource' | 'exercise'
-  title: string
-  content: string
-}
-
-export interface ThingLinkHotspot {
-  id: string
-  title: string
-  description: string
-  deepDive: string
-  mediaSuggestion: string
-}
-
-export interface SubtitleEntry {
-  id: string
-  index: number
-  startTime: string
-  endTime: string
-  text: string
-  speaker?: string
-}
-
-export type EditorContent = 
-  | { type: 'quiz'; questions: QuizQuestion[] }
-  | { type: 'padlet'; cards: PadletCard[] }
-  | { type: 'thinglink'; hotspots: ThingLinkHotspot[] }
-  | { type: 'subtitles' | 'karaoke'; entries: SubtitleEntry[] }
-  | { type: 'presentations' | 'maps'; htmlContent: string }
-  | null
-
-interface ProgressState {
-  percent: number
-  message: string
-}
+export type GenerationStatus =
+  | 'idle'
+  | 'uploading'
+  | 'processing'
+  | 'variants_ready'
+  | 'building'
+  | 'complete'
+  | 'error'
 
 interface AppStore {
-  // State
-  appState: AppState
-  selectedTask: TaskType | null
-  uploadedFiles: UploadedFile[]
+  currentStep: 1 | 2 | 3 | 4
+  sourceFile: File | null
+  masterFile: File | null
+  taskType: TaskType | null
   customPrompt: string
-  gammaTemplateId: string
-  exportFormat: ExportFormat
-  progress: ProgressState
-  editorContent: EditorContent
-  rawOutput: string | null
+  generationStatus: GenerationStatus
+  generationId: string | null
+  sections: SlideSection[]
+  selectedVariants: Record<number, number>
+  outputUrl: string | null
+  isFirstVisit: boolean
   error: string | null
-  sidebarExpanded: boolean
-  hasStartedGeneration: boolean
+  progress: { percent: number; message: string }
 
-  // Actions
-  setAppState: (state: AppState) => void
-  setSelectedTask: (task: TaskType | null) => void
-  addFile: (file: File) => string
-  updateFileId: (id: string, fileId: string) => void
-  removeFile: (id: string) => void
+  setStep: (step: 1 | 2 | 3 | 4) => void
+  setSourceFile: (file: File | null) => void
+  setMasterFile: (file: File | null) => void
+  setTaskType: (type: TaskType | null) => void
   setCustomPrompt: (prompt: string) => void
-  setGammaTemplateId: (id: string) => void
-  setExportFormat: (format: ExportFormat) => void
-  setProgress: (progress: ProgressState) => void
-  setEditorContent: (content: EditorContent) => void
-  setRawOutput: (output: string | null) => void
+  setGenerationStatus: (status: GenerationStatus) => void
+  setGenerationId: (id: string | null) => void
+  setSections: (sections: SlideSection[]) => void
+  selectVariant: (sectionIndex: number, variantIndex: number) => void
+  setOutputUrl: (url: string | null) => void
+  setIsFirstVisit: (value: boolean) => void
   setError: (error: string | null) => void
-  setSidebarExpanded: (expanded: boolean) => void
-  setHasStartedGeneration: (started: boolean) => void
+  setProgress: (progress: { percent: number; message: string }) => void
   reset: () => void
 }
 
 const initialState = {
-  appState: 'idle' as AppState,
-  selectedTask: null as TaskType | null,
-  uploadedFiles: [] as UploadedFile[],
+  currentStep: 1 as const,
+  sourceFile: null as File | null,
+  masterFile: null as File | null,
+  taskType: null as TaskType | null,
   customPrompt: '',
-  gammaTemplateId: 'g_dekycmq6z00ar72',
-  exportFormat: 'pptx' as ExportFormat,
-  progress: { percent: 0, message: '' },
-  editorContent: null as EditorContent,
-  rawOutput: null as string | null,
+  generationStatus: 'idle' as GenerationStatus,
+  generationId: null as string | null,
+  sections: [] as SlideSection[],
+  selectedVariants: {} as Record<number, number>,
+  outputUrl: null as string | null,
+  isFirstVisit: typeof window !== 'undefined'
+    ? localStorage.getItem('scolastica_visited') !== 'true'
+    : true,
   error: null as string | null,
-  sidebarExpanded: true,
-  hasStartedGeneration: false,
+  progress: { percent: 0, message: '' },
 }
 
-export const useAppStore = create<AppStore>((set, get) => ({
+export const useAppStore = create<AppStore>((set) => ({
   ...initialState,
 
-  setAppState: (appState) => set({ appState }),
-  setSelectedTask: (selectedTask) => set({ selectedTask }),
-  
-  addFile: (file) => {
-    const id = `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-    set((state) => ({
-      uploadedFiles: [...state.uploadedFiles, { id, file, fileId: null }]
-    }))
-    return id
-  },
-  
-  updateFileId: (id, fileId) => {
-    set((state) => ({
-      uploadedFiles: state.uploadedFiles.map(f => 
-        f.id === id ? { ...f, fileId } : f
-      )
-    }))
-  },
-  
-  removeFile: (id) => {
-    set((state) => ({
-      uploadedFiles: state.uploadedFiles.filter(f => f.id !== id)
-    }))
-  },
-  
+  setStep: (currentStep) => set({ currentStep }),
+  setSourceFile: (sourceFile) => set({ sourceFile }),
+  setMasterFile: (masterFile) => set({ masterFile }),
+  setTaskType: (taskType) => set({ taskType }),
   setCustomPrompt: (customPrompt) => set({ customPrompt }),
-  setGammaTemplateId: (gammaTemplateId) => set({ gammaTemplateId }),
-  setExportFormat: (exportFormat) => set({ exportFormat }),
-  setProgress: (progress) => set({ progress }),
-  setEditorContent: (editorContent) => set({ editorContent }),
-  setRawOutput: (rawOutput) => set({ rawOutput }),
+  setGenerationStatus: (generationStatus) => set({ generationStatus }),
+  setGenerationId: (generationId) => set({ generationId }),
+  setSections: (sections) => set({ sections }),
+  selectVariant: (sectionIndex, variantIndex) =>
+    set((state) => ({
+      selectedVariants: { ...state.selectedVariants, [sectionIndex]: variantIndex },
+    })),
+  setOutputUrl: (outputUrl) => set({ outputUrl }),
+  setIsFirstVisit: (isFirstVisit) => {
+    if (!isFirstVisit && typeof window !== 'undefined') {
+      localStorage.setItem('scolastica_visited', 'true')
+    }
+    set({ isFirstVisit })
+  },
   setError: (error) => set({ error }),
-  setSidebarExpanded: (sidebarExpanded) => set({ sidebarExpanded }),
-  setHasStartedGeneration: (hasStartedGeneration) => set({ hasStartedGeneration }),
-  reset: () => set(initialState),
+  setProgress: (progress) => set({ progress }),
+  reset: () => set({ ...initialState, isFirstVisit: false }),
 }))

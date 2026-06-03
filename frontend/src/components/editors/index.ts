@@ -1,5 +1,0 @@
-export { QuizEditor } from './quiz-editor'
-export { PadletEditor } from './padlet-editor'
-export { ThingLinkEditor } from './thinglink-editor'
-export { SubtitleEditor } from './subtitle-editor'
-export { HtmlEditor } from './html-editor'

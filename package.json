@@ -1,0 +1,23 @@
+{
+  "name": "scolastica",
+  "version": "1.0.0",
+  "description": "Piattaforma web per automatizzare la creazione di contenuti educativi (PowerPoint, sottotitoli, quiz, mappe interattive) a partire da documenti sorgente, con AI che genera varianti multiple e l'operatore sceglie la migliore.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/daro-hub/Scolastica.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/daro-hub/Scolastica/issues"
+  },
+  "homepage": "https://github.com/daro-hub/Scolastica#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.60.0"
+  }
+}

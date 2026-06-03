@@ -1,115 +1,198 @@
+import { createClient } from '@supabase/supabase-js'
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
-export async function uploadFile(file: File): Promise<string> {
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+
+export const supabase = supabaseUrl
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null
+
+function getAuthHeaders(): Record<string, string> {
+  if (typeof window === 'undefined') return {}
+  const pw = sessionStorage.getItem('scolastica_password') || ''
+  return pw ? { 'x-app-password': pw } : {}
+}
+
+export async function uploadFiles(
+  sourceFile: File,
+  masterFile?: File | null
+): Promise<{ sourceFileId: string; masterFileId?: string }> {
   const formData = new FormData()
-  formData.append('files', file)
+  formData.append('files', sourceFile)
+  if (masterFile) {
+    formData.append('files', masterFile)
+  }
 
   const response = await fetch(`${API_BASE}/upload`, {
     method: 'POST',
+    headers: { ...getAuthHeaders() },
     body: formData,
   })
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Upload failed' }))
-    throw new Error(error.detail || 'Upload failed')
+    const error = await response.json().catch(() => ({ detail: 'Errore durante il caricamento dei file' }))
+    throw new Error(error.detail || 'Errore durante il caricamento dei file')
   }
 
   const data = await response.json()
-  
-  if (!data.file_ids || data.file_ids.length === 0) {
-    throw new Error('No file ID returned from server')
+  const fileIds: string[] = data.file_ids
+
+  return {
+    sourceFileId: fileIds[0],
+    masterFileId: fileIds.length > 1 ? fileIds[1] : undefined,
   }
-  
-  return data.file_ids[0]
 }
 
-export async function processFiles(
-  fileIds: string[], 
-  taskType: string, 
-  customPrompt?: string,
-  gammaTemplateId?: string,
-  exportFormat?: string
-): Promise<{ content: string; filename: string; blob?: Blob }> {
-  const response = await fetch(`${API_BASE}/process`, {
+export async function createProject(
+  name: string,
+  masterFileId?: string
+): Promise<{ projectId: string; masterLayouts: unknown }> {
+  const response = await fetch(`${API_BASE}/v2/projects`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify({
-      task_type: taskType,
-      file_ids: fileIds,
-      custom_prompt: customPrompt || undefined,
-      gamma_template_id: gammaTemplateId || undefined,
-      export_format: exportFormat || undefined,
+      name,
+      master_file_id: masterFileId || undefined,
     }),
   })
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Processing failed' }))
-    throw new Error(error.detail || 'Processing failed')
+    const error = await response.json().catch(() => ({ detail: 'Errore nella creazione del progetto' }))
+    throw new Error(error.detail || 'Errore nella creazione del progetto')
   }
 
   const data = await response.json()
-  
-  if (!data.outputs || data.outputs.length === 0) {
-    throw new Error('No outputs returned from server')
+  return {
+    projectId: data.project_id,
+    masterLayouts: data.master_layouts,
   }
-  
-  const outputId = data.outputs[0]?.id
-  const outputExt = data.outputs[0]?.extension || ''
-
-  if (!outputId) {
-    throw new Error('No output ID in response')
-  }
-
-  const downloadResponse = await fetch(`${API_BASE}/download/${outputId}`)
-  
-  if (!downloadResponse.ok) {
-    throw new Error('Failed to download result')
-  }
-
-  const isBinary = ['.pptx', '.pdf', '.ppt'].includes(outputExt)
-  const contentDisposition = downloadResponse.headers.get('content-disposition')
-  const filenameMatch = contentDisposition?.match(/filename="?([^"]+)"?/)
-  const filename = filenameMatch?.[1] || data.outputs[0]?.filename || 'output'
-
-  if (isBinary) {
-    const blob = await downloadResponse.blob()
-    return { content: '', filename, blob }
-  }
-
-  const content = await downloadResponse.text()
-  return { content, filename }
 }
 
-export function downloadContent(content: string, filename: string, mimeType?: string) {
-  const type = mimeType || (filename.endsWith('.html') ? 'text/html' : 'application/octet-stream')
-  const blob = new Blob([content], { type: `${type};charset=utf-8` })
-  const url = URL.createObjectURL(blob)
+export interface SlideVariant {
+  variant_index: number
+  slide_index: number
+  layout_name: string
+  design_rationale: string
+  thumbnail_url: string
+}
+
+export interface SlideSection {
+  section_index: number
+  heading: string
+  variants: SlideVariant[]
+}
+
+export interface GenerationResult {
+  generationId: string
+  status: 'variants_ready' | 'completed' | 'failed'
+  sections?: SlideSection[]
+  output?: { id: string; filename: string; extension: string }
+  error?: string
+}
+
+export async function startGeneration(
+  projectId: string,
+  taskType: string,
+  sourceFileIds: string[],
+  prompt?: string
+): Promise<GenerationResult> {
+  const response = await fetch(`${API_BASE}/v2/projects/${projectId}/generate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    body: JSON.stringify({
+      task_type: taskType,
+      source_file_ids: sourceFileIds,
+      custom_prompt: prompt || undefined,
+      num_variants: 5,
+    }),
+  })
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Errore nell\'avvio della generazione' }))
+    throw new Error(error.detail || 'Errore nell\'avvio della generazione')
+  }
+
+  const data = await response.json()
+  return {
+    generationId: data.generation_id,
+    status: data.status,
+    sections: data.sections,
+    output: data.output,
+    error: data.error,
+  }
+}
+
+export async function buildFinal(
+  generationId: string,
+  imageSelections?: Record<string, string>
+): Promise<string> {
+  const response = await fetch(`${API_BASE}/v2/generations/${generationId}/build`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    body: JSON.stringify({
+      image_selections: imageSelections || undefined,
+    }),
+  })
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Errore nella creazione del file finale' }))
+    throw new Error(error.detail || 'Errore nella creazione del file finale')
+  }
+
+  const data = await response.json()
+  return data.output_url || `${API_BASE}/download/${data.generation_id}`
+}
+
+export interface ImageSearchResult {
+  id: string
+  url: string
+  thumbnailUrl: string
+  description: string
+  source: string
+}
+
+export async function searchImages(
+  query: string,
+  page: number = 1
+): Promise<{ results: ImageSearchResult[]; totalPages: number }> {
+  const params = new URLSearchParams({
+    query,
+    page: String(page),
+    page_size: '20',
+  })
+
+  const response = await fetch(`${API_BASE}/v2/images/search?${params}`, {
+    headers: { ...getAuthHeaders() },
+  })
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Errore nella ricerca immagini' }))
+    throw new Error(error.detail || 'Errore nella ricerca immagini')
+  }
+
+  const data = await response.json()
+
+  const results: ImageSearchResult[] = (data.images || []).map((img: Record<string, unknown>) => ({
+    id: img.id as string,
+    url: (img.preview_url || img.url) as string,
+    thumbnailUrl: (img.thumbnail_url || img.preview_url || img.url) as string,
+    description: (img.title || img.description || '') as string,
+    source: (img.source || 'unsplash') as string,
+  }))
+
+  return {
+    results,
+    totalPages: Math.ceil((data.result_count || results.length) / 20),
+  }
+}
+
+export function downloadFromUrl(url: string, filename: string) {
   const a = document.createElement('a')
   a.href = url
   a.download = filename
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)
-  URL.revokeObjectURL(url)
-}
-
-export function getFileIcon(filename: string): string {
-  const ext = filename.split('.').pop()?.toLowerCase()
-  switch (ext) {
-    case 'pdf': return '📄'
-    case 'doc':
-    case 'docx': return '📝'
-    case 'txt': return '📃'
-    case 'mp3':
-    case 'wav': return '🎵'
-    case 'mp4':
-    case 'webm': return '🎬'
-    default: return '📎'
-  }
-}
-
-export function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
