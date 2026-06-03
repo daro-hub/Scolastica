@@ -50,7 +50,18 @@ async def check_password(request, call_next):
     if not APP_PASSWORD:
         return await call_next(request)
 
-    if request.url.path in ('/health', '/docs', '/openapi.json'):
+    path = request.url.path
+    public_paths = ('/health', '/docs', '/openapi.json')
+    static_prefixes = ('/_next/', '/static-assets/')
+    static_extensions = ('.html', '.js', '.css', '.png', '.svg', '.ico', '.txt', '.json', '.woff', '.woff2')
+
+    if path in public_paths:
+        return await call_next(request)
+    if any(path.startswith(p) for p in static_prefixes):
+        return await call_next(request)
+    if any(path.endswith(ext) for ext in static_extensions):
+        return await call_next(request)
+    if path == '/' or path == '':
         return await call_next(request)
 
     password = (
