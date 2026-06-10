@@ -124,16 +124,21 @@ def _resolve_placeholder_type(ph) -> str:
 
 
 def extract_content(pdf_path: str) -> dict:
-    """Extract text, images, and structural information from a PDF.
+    """Extract text and images from a PDF with correct reading order.
+
+    Produces clean per-page text (column-aware) plus document-level font stats.
+    The semantic classification (theory vs exercise) is delegated to the LLM,
+    which is far more robust than font heuristics for educational PDFs.
 
     Args:
         pdf_path: Path to the source PDF.
 
     Returns:
         A dict with:
-          - ``sections``: list of dicts, each with ``heading``, ``text``, ``page_numbers``
-          - ``images``: list of dicts with ``path`` (temp file), ``page``, ``index``
-          - ``full_text``: concatenated raw text (fallback)
+          - ``pages``: list of dicts, each with ``page``, ``text`` (reading-ordered)
+          - ``full_text``: concatenated clean text across pages
+          - ``images``: list of dicts with ``path``, ``page``, ``index``, dimensions
+          - ``tmp_dir``: temp dir holding extracted images
 
     Raises:
         FileNotFoundError: If the PDF does not exist.
@@ -148,49 +153,32 @@ def extract_content(pdf_path: str) -> dict:
     except Exception as exc:
         raise RuntimeError(f"Cannot open PDF: {exc}") from exc
 
-    sections: list[dict[str, Any]] = []
+    pages: list[dict[str, Any]] = []
     images: list[dict[str, Any]] = []
     full_text_parts: list[str] = []
     tmp_dir = tempfile.mkdtemp(prefix="pptx_extract_")
 
-    current_section: dict[str, Any] | None = None
-
     for page_num in range(len(doc)):
         page = doc[page_num]
-        blocks = page.get_text("dict", flags=fitz.TEXT_PRESERVE_WHITESPACE)["blocks"]
+        page_width = page.rect.width
 
-        for block in blocks:
-            if block["type"] == 0:  # text block
-                block_text = _extract_block_text(block)
-                if not block_text.strip():
+        raw = page.get_text("dict", flags=fitz.TEXT_PRESERVE_WHITESPACE)
+        text_blocks = [b for b in raw["blocks"] if b["type"] == 0]
+
+        ordered_text = _reading_order_text(text_blocks, page_width)
+        if ordered_text.strip():
+            pages.append({"page": page_num + 1, "text": ordered_text})
+            full_text_parts.append(ordered_text)
+
+        for block in raw["blocks"]:
+            if block["type"] == 1:
+                w = block.get("width", 0) or (block["bbox"][2] - block["bbox"][0])
+                h = block.get("height", 0) or (block["bbox"][3] - block["bbox"][1])
+                if w < 60 or h < 60:
                     continue
-
-                full_text_parts.append(block_text)
-
-                if _is_heading(block):
-                    if current_section:
-                        sections.append(current_section)
-                    current_section = {
-                        "heading": block_text.strip(),
-                        "text": "",
-                        "page_numbers": [page_num + 1],
-                    }
-                elif current_section:
-                    current_section["text"] += block_text + "\n"
-                    if (page_num + 1) not in current_section["page_numbers"]:
-                        current_section["page_numbers"].append(page_num + 1)
-                else:
-                    current_section = {
-                        "heading": "",
-                        "text": block_text + "\n",
-                        "page_numbers": [page_num + 1],
-                    }
-
-            elif block["type"] == 1:  # image block
                 img_ext = block.get("ext", "png")
                 img_filename = f"img_p{page_num + 1}_{uuid.uuid4().hex[:8]}.{img_ext}"
                 img_path = os.path.join(tmp_dir, img_filename)
-
                 try:
                     with open(img_path, "wb") as f:
                         f.write(block["image"])
@@ -198,77 +186,148 @@ def extract_content(pdf_path: str) -> dict:
                         "path": img_path,
                         "page": page_num + 1,
                         "index": len(images),
-                        "width": block.get("width", 0),
-                        "height": block.get("height", 0),
+                        "width": w,
+                        "height": h,
                     })
                 except (KeyError, IOError):
                     pass
 
-    if current_section:
-        sections.append(current_section)
-
     doc.close()
 
     return {
-        "sections": sections,
+        "pages": pages,
+        "full_text": "\n\n".join(full_text_parts),
         "images": images,
-        "full_text": "\n".join(full_text_parts),
         "tmp_dir": tmp_dir,
     }
 
 
+def _reading_order_text(text_blocks: list[dict], page_width: float) -> str:
+    """Reconstruct page text in human reading order, handling 2-column layouts."""
+    if not text_blocks:
+        return ""
+
+    mid_x = page_width / 2.0
+    left_col = []
+    right_col = []
+    full_width = []
+
+    for block in text_blocks:
+        x0, _, x1, _ = block["bbox"]
+        block_width = x1 - x0
+        if block_width > page_width * 0.55:
+            full_width.append(block)
+        elif x1 <= mid_x + page_width * 0.05:
+            left_col.append(block)
+        elif x0 >= mid_x - page_width * 0.05:
+            right_col.append(block)
+        else:
+            full_width.append(block)
+
+    is_two_column = len(left_col) >= 2 and len(right_col) >= 2
+
+    if is_two_column:
+        ordered = (
+            sorted(full_width, key=lambda b: b["bbox"][1])
+            + sorted(left_col, key=lambda b: b["bbox"][1])
+            + sorted(right_col, key=lambda b: b["bbox"][1])
+        )
+    else:
+        ordered = sorted(text_blocks, key=lambda b: (b["bbox"][1], b["bbox"][0]))
+
+    parts = [_extract_block_text(b) for b in ordered]
+    return "\n".join(p for p in parts if p.strip())
+
+
 def _extract_block_text(block: dict) -> str:
-    """Concatenate all span texts from a text block."""
-    parts: list[str] = []
+    """Concatenate span texts from a block, joining spans on the same line with spaces."""
+    lines_out: list[str] = []
     for line in block.get("lines", []):
-        for span in line.get("spans", []):
-            parts.append(span.get("text", ""))
-        parts.append("\n")
-    return "".join(parts).rstrip("\n")
+        spans = [s.get("text", "") for s in line.get("spans", [])]
+        line_text = "".join(spans)
+        if line_text.strip():
+            lines_out.append(line_text.rstrip())
+    return "\n".join(lines_out)
 
 
-def _is_heading(block: dict) -> bool:
-    """Heuristic: a block is a heading if its font size is notably larger or bold."""
-    sizes: list[float] = []
-    flags: list[int] = []
-    for line in block.get("lines", []):
-        for span in line.get("spans", []):
-            sizes.append(span.get("size", 12))
-            flags.append(span.get("flags", 0))
+def _load_reference_data() -> tuple[dict, dict]:
+    """Load the layout rules and few-shot examples derived from real operator decks."""
+    base = Path(__file__).parent.parent
+    rules, fewshot = {}, {}
+    try:
+        with open(base / "layout_rules.json", encoding="utf-8") as f:
+            rules = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        pass
+    try:
+        with open(base / "fewshot_examples.json", encoding="utf-8") as f:
+            fewshot = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        pass
+    return rules, fewshot
 
-    if not sizes:
-        return False
 
-    avg_size = sum(sizes) / len(sizes)
-    is_bold = any(f & 2 ** 4 for f in flags)
+def _build_layout_guide(master_layouts: dict | None, rules: dict) -> str:
+    """Build a concise, operator-derived guide of which layout to use for what."""
+    used_layouts = rules.get("layouts", {})
+    available = {}
+    if master_layouts:
+        for layout in master_layouts.get("layouts", []):
+            available[layout["name"]] = layout
 
-    return avg_size >= 16 or is_bold
+    lines = []
+    for name, info in used_layouts.items():
+        match = available.get(name)
+        idx_note = ""
+        if match:
+            idx_note = f" (layout_index={match['index']})"
+        roles = []
+        if info.get("title_placeholder_idx"):
+            roles.append(f"title/heading idx={info['title_placeholder_idx']}")
+        if info.get("heading_placeholder_idx"):
+            roles.append(f"heading idx={info['heading_placeholder_idx']}")
+        if info.get("body_placeholder_idx"):
+            roles.append(f"body idx={info['body_placeholder_idx']}")
+        if info.get("image_placeholder_idx"):
+            roles.append(f"image idx={info['image_placeholder_idx']}")
+        if info.get("table_placeholder_idx"):
+            roles.append(f"table idx={info['table_placeholder_idx']}")
+        lines.append(f'- "{name}"{idx_note}: {"; ".join(roles)}')
+    return "\n".join(lines)
+
+
+def _build_fewshot_block(fewshot: dict, max_examples: int = 2) -> str:
+    """Build a compact few-shot block showing real PDF->slide deck structure."""
+    examples = fewshot.get("examples", [])[:max_examples]
+    blocks = []
+    for ex in examples:
+        slides_compact = []
+        for s in ex.get("slides", []):
+            ph = s.get("placeholders", {})
+            slides_compact.append({
+                "layout_name": s.get("layout_name"),
+                "placeholders": ph,
+            })
+        blocks.append(f"UNIT {ex.get('unit')} (desired output deck):\n" +
+                       json.dumps(slides_compact, ensure_ascii=False, indent=1))
+    return "\n\n".join(blocks)
 
 
 async def generate_variants(
     content: dict,
     master_layouts: dict | None,
-    num_variants: int = 5,
+    num_variants: int = 2,
     custom_prompt: str | None = None,
 ) -> list[dict[str, Any]]:
-    """Call Claude to generate variant layout proposals for each content section.
+    """Generate a slide deck plan from PDF content, mimicking the expert operator.
 
-    Each variant specifies which master layout to use, how to fill placeholders,
-    and image search suggestions. Text is ONLY cut from the original, never rephrased.
-
-    Args:
-        content: Output of ``extract_content``.
-        master_layouts: Output of ``analyze_master``, or None for default layouts.
-        num_variants: Number of variants per section.
-        custom_prompt: Optional additional instructions.
+    Produces, per content section/slide, ``num_variants`` layout alternatives.
+    Follows the real operator grammar learned from training examples:
+    keep only theory (discard exercises/audio/tests), rewrite concisely,
+    use the 7 known layouts with the correct deck structure.
 
     Returns:
-        List of section objects, each containing a ``variants`` list with
-        ``num_variants`` entries.
-
-    Raises:
-        RuntimeError: If the API call fails.
-        EnvironmentError: If neither Bedrock nor Anthropic API credentials are set.
+        List of section objects, each with a ``variants`` list.
     """
     if not USE_BEDROCK and not ANTHROPIC_API_KEY:
         raise EnvironmentError(
@@ -276,55 +335,75 @@ async def generate_variants(
             "BEDROCK_AWS_SECRET_ACCESS_KEY (preferred) or ANTHROPIC_API_KEY."
         )
 
-    layouts_desc = json.dumps(
-        master_layouts["layouts"] if master_layouts else _default_layouts(),
-        indent=2, default=str,
+    rules, fewshot = _load_reference_data()
+    layout_guide = _build_layout_guide(master_layouts, rules)
+    fewshot_block = _build_fewshot_block(fewshot)
+
+    pages = content.get("pages", [])
+    if not pages and content.get("sections"):
+        pages = [{"page": i + 1, "text": s.get("heading", "") + "\n" + s.get("text", "")}
+                 for i, s in enumerate(content["sections"])]
+
+    source_text = "\n\n".join(
+        f"--- PDF page {p['page']} ---\n{p['text'][:3500]}" for p in pages
     )
+    source_text = source_text[:45000]
 
-    sections_for_prompt: list[dict] = []
-    max_sections = 12
-    relevant_sections = [
-        s for s in content["sections"]
-        if len(s.get("text", "").strip()) > 20 or len(s.get("heading", "").strip()) > 10
-    ][:max_sections]
+    layout_index_map = {}
+    if master_layouts:
+        for layout in master_layouts.get("layouts", []):
+            layout_index_map[layout["name"]] = layout["index"]
 
-    for i, section in enumerate(relevant_sections):
-        sections_for_prompt.append({
-            "index": i,
-            "heading": section["heading"][:200],
-            "text": section["text"][:2000],
-        })
+    user_message = f"""You are an expert editorial assistant for an Italian educational publisher. You convert English-language textbook unit PDFs into study/revision slide decks, following EXACTLY the style of the publisher's expert operator.
 
-    user_message = f"""You are a presentation design assistant. Given the following content sections extracted from a PDF and the available PowerPoint master layouts, generate {num_variants} variant proposals for each section.
+## HOW THE OPERATOR WORKS (learned from real examples)
 
-AVAILABLE LAYOUTS:
-{layouts_desc}
+1. SELECTION - This is critical. The PDF is a student workbook full of exercises, audio/vlog prompts, fill-in-the-gap tasks, true/false grids, "CRITICAL THINKING", "IN PAIRS", self-tests, vocabulary-match activities. The operator DISCARDS all of these. He keeps ONLY the THEORY: the declarative subject-matter content (definitions, classifications, processes, concepts) found in the reading boxes and numbered sub-sections.
 
-CONTENT SECTIONS:
-{json.dumps(sections_for_prompt, indent=2, ensure_ascii=False)}
+2. REWRITE - The kept theory is REWRITTEN concisely: remove subordinate clauses, examples, hedging. Turn long passages into short declarative sentences. Lists become one short line per item. Target 8-40 words per slide body. NEVER copy the exercise instructions.
 
-CRITICAL RULES:
-- You MUST only use EXACT text fragments cut from the original content. NEVER rewrite, paraphrase, summarize, or rephrase any text.
-- If text doesn't fit a placeholder, cut more aggressively. Do NOT reformulate to make it shorter.
-- Each variant must specify: layout_index, placeholder_fills (mapping placeholder idx to content), and image_suggestions (Getty search terms).
-- Return valid JSON only, no markdown fencing.
+3. STRUCTURE (deck grammar) - The deck ALWAYS follows this skeleton:
+   - Slide 1: "Title Slide" -> idx 0 = "Unit N\\n<Theme>" (theme from the unit opener page)
+   - Each STEP in the PDF opens with "Capitolo + Immagine" -> idx 14 = "Step N\\n<Step name>"
+   - Between dividers: content slides walking that step's theory sub-sections, in order
+   - A single theory sub-section title (e.g. "Market research") becomes the HEADING, repeated across consecutive slides if the content is long, ALTERNATING layouts so the image flips side: 2_Testo -> 1_Testo -> Testo...
 
-OUTPUT FORMAT (JSON):
+## LAYOUTS TO USE (use ONLY these, by exact name; pick layout_index from the map)
+{layout_guide}
+
+Layout name -> index map for THIS master: {json.dumps(layout_index_map, ensure_ascii=False)}
+
+## LAYOUT SELECTION RULES
+- Unit title -> "Title Slide" (idx 0)
+- STEP divider -> "Capitolo + Immagine" (idx 14 = "Step N\\n<name>")
+- A concept/definition with an image -> "2_Testo + 1 Immagine" (idx 15 heading, idx 18 body)
+- Continuation of same concept (image flips) -> "1_Testo + 1 Immagine" (idx 15 body) then "Testo + 1 Immagine" (idx 15 heading, idx 18 body, no image)
+- Two-sided comparison (X vs Y, Dos/Don'ts, hard/soft skills) -> "Tabella" (idx 15 heading, idx 14 table)
+- Mind map / 3 parallel concepts -> "3 colonne Txt + Img" (idx 20 top heading, idx 15/17/19 columns)
+
+## REAL EXAMPLES OF DESIRED OUTPUT
+{fewshot_block}
+
+## YOUR TASK
+Read the source PDF text below. Produce the slide deck the operator would make.
+For EACH slide, propose {num_variants} layout VARIANTS (alternative ways to lay out that same content - e.g. variant 1 uses "2_Testo + 1 Immagine", variant 2 uses "Testo + 1 Immagine"). The operator will pick one per slide.
+
+Each variant's placeholder_fills must use the EXACT placeholder idx for that layout (from the rules above). For text use {{"type":"text","content":"..."}}. For images use {{"type":"image","suggestion":"<english search phrase>"}}. For tables use {{"type":"table","rows":[["col1","col2"],...]}}.
+
+## SOURCE PDF
+{source_text}
+
+## OUTPUT (valid JSON only, no markdown fencing)
 [
   {{
     "section_index": 0,
-    "heading": "...",
+    "heading": "short label for this slide (for the operator UI)",
     "variants": [
       {{
-        "layout_index": 1,
-        "layout_name": "...",
-        "placeholder_fills": {{
-          "0": {{"type": "text", "content": "exact fragment from original"}},
-          "1": {{"type": "text", "content": "exact fragment from original"}},
-          "10": {{"type": "image", "suggestion": "getty search term"}}
-        }},
-        "image_suggestions": ["search term 1", "search term 2"],
-        "design_rationale": "brief explanation of why this layout works"
+        "layout_index": <int>,
+        "layout_name": "<exact name>",
+        "placeholder_fills": {{ "15": {{"type":"text","content":"..."}}, "18": {{"type":"text","content":"..."}}, "16": {{"type":"image","suggestion":"..."}} }},
+        "design_rationale": "why this layout"
       }}
     ]
   }}
@@ -332,9 +411,9 @@ OUTPUT FORMAT (JSON):
 """
 
     if custom_prompt:
-        user_message += f"\n\nADDITIONAL INSTRUCTIONS FROM OPERATOR:\n{custom_prompt}"
+        user_message += f"\n\n## ADDITIONAL OPERATOR INSTRUCTIONS\n{custom_prompt}"
 
-    assistant_text = await _call_llm(user_message, max_tokens=16384)
+    assistant_text = await _call_llm(user_message, max_tokens=32000)
 
     try:
         variants = json.loads(assistant_text)
@@ -385,7 +464,7 @@ async def _call_bedrock(prompt: str, max_tokens: int) -> str:
     body = json.dumps({
         "anthropic_version": "bedrock-2023-05-31",
         "max_tokens": max_tokens,
-        "temperature": 0.4,
+        "temperature": 0.1,
         "messages": [{"role": "user", "content": [{"type": "text", "text": prompt}]}],
     })
 
@@ -547,7 +626,11 @@ def _apply_fill(
     fill_data: dict[str, Any],
     images: dict[str, str],
 ) -> None:
-    """Apply a single fill instruction to a slide placeholder."""
+    """Apply a single fill instruction to a slide placeholder.
+
+    Validates the placeholder exists; handles multi-paragraph text, images
+    (left empty if no file, matching the operator workflow), and tables.
+    """
     try:
         ph = slide.placeholders[placeholder_idx]
     except KeyError:
@@ -557,7 +640,7 @@ def _apply_fill(
     content = fill_data.get("content", "")
 
     if fill_type == "text":
-        ph.text = content
+        _set_multiparagraph_text(ph, content)
 
     elif fill_type == "image":
         img_key = str(placeholder_idx)
@@ -566,22 +649,45 @@ def _apply_fill(
         if img_path and Path(img_path).exists():
             try:
                 ph.insert_picture(open(img_path, "rb"))
-            except AttributeError:
-                from pptx.util import Inches as _Inches
-                left = ph.left
-                top = ph.top
-                width = ph.width
-                height = ph.height
-                slide.shapes.add_picture(img_path, left, top, width, height)
-        else:
-            ph.text = f"[Image: {fill_data.get('suggestion', 'placeholder')}]"
+            except (AttributeError, Exception):
+                try:
+                    slide.shapes.add_picture(img_path, ph.left, ph.top, ph.width, ph.height)
+                except Exception:
+                    pass
+        # If no image file: leave the placeholder empty (operator fills it later).
+        # Never write "[Image: ...]" text into a picture slot.
 
     elif fill_type == "table":
         rows_data = fill_data.get("rows", [])
         if rows_data:
             _insert_table(slide, ph, rows_data)
-        else:
+        elif content:
+            _set_multiparagraph_text(ph, content)
+
+
+def _set_multiparagraph_text(ph, content: str) -> None:
+    """Set text on a placeholder, preserving line breaks as separate paragraphs."""
+    if not ph.has_text_frame:
+        try:
             ph.text = content
+        except Exception:
+            pass
+        return
+
+    tf = ph.text_frame
+    lines = content.split("\n") if content else [""]
+
+    tf.paragraphs[0].text = lines[0]
+    for line in lines[1:]:
+        p = tf.add_paragraph()
+        p.text = line
+
+    try:
+        from pptx.enum.text import MSO_AUTO_SIZE
+        tf.word_wrap = True
+        tf.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE
+    except Exception:
+        pass
 
 
 def _insert_table(slide, placeholder, rows: list[list[str]]) -> None:

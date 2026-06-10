@@ -1,0 +1,965 @@
+{
+  "layouts": {
+    "Title Slide": {
+      "name": "Title Slide",
+      "slides_using_this_layout": 10,
+      "title_placeholder_idx": [
+        0
+      ],
+      "heading_placeholder_idx": [],
+      "body_placeholder_idx": [],
+      "image_placeholder_idx": [],
+      "table_placeholder_idx": [],
+      "placeholders": {
+        "0": {
+          "idx": 0,
+          "role": "title",
+          "role_distribution": {
+            "title": 10
+          },
+          "examples": [
+            "Unit 1\nThe world of tourism",
+            "Unit 2\nThe where and what of tourism"
+          ]
+        }
+      }
+    },
+    "Capitolo + Immagine": {
+      "name": "Capitolo + Immagine",
+      "slides_using_this_layout": 27,
+      "title_placeholder_idx": [
+        0
+      ],
+      "heading_placeholder_idx": [
+        14
+      ],
+      "body_placeholder_idx": [],
+      "image_placeholder_idx": [
+        13
+      ],
+      "table_placeholder_idx": [],
+      "placeholders": {
+        "0": {
+          "idx": 0,
+          "role": "title",
+          "role_distribution": {
+            "title": 9
+          },
+          "examples": [
+            "STEP 1\nTypes of accommodation",
+            "STEP 2\nThe guest\nlife cycle"
+          ]
+        },
+        "13": {
+          "idx": 13,
+          "role": "image",
+          "role_distribution": {
+            "image": 18
+          },
+          "examples": []
+        },
+        "14": {
+          "idx": 14,
+          "role": "heading",
+          "role_distribution": {
+            "heading": 16,
+            "body": 2
+          },
+          "examples": [
+            "Step 1\nIntroduction\nto tourism",
+            "Step 2\nThe travel\nand tourism industry"
+          ],
+          "word_count": {
+            "min": 7,
+            "median": 7,
+            "max": 7,
+            "samples": 2
+          }
+        }
+      }
+    },
+    "2_Testo + 1 Immagine": {
+      "name": "2_Testo + 1 Immagine",
+      "slides_using_this_layout": 100,
+      "title_placeholder_idx": [
+        0
+      ],
+      "heading_placeholder_idx": [
+        15
+      ],
+      "body_placeholder_idx": [
+        18
+      ],
+      "image_placeholder_idx": [
+        16
+      ],
+      "table_placeholder_idx": [],
+      "placeholders": {
+        "0": {
+          "idx": 0,
+          "role": "title",
+          "role_distribution": {
+            "title": 54
+          },
+          "examples": [
+            "Guests can choose different board options.\nThe all-inclusive plan provides all meals, snacks\nand drinks.\nFull board includes breakfast, lunch and dinner.",
+            "Hotels can be independent\nor can belong to a chain,\na company or an owner that manages a group of hotels offering similar experiences\nin different areas."
+          ]
+        },
+        "15": {
+          "idx": 15,
+          "role": "heading",
+          "role_distribution": {
+            "heading": 46
+          },
+          "examples": [
+            "What is tourism?",
+            "What is tourism?"
+          ]
+        },
+        "16": {
+          "idx": 16,
+          "role": "image",
+          "role_distribution": {
+            "image": 46
+          },
+          "examples": []
+        },
+        "18": {
+          "idx": 18,
+          "role": "body",
+          "role_distribution": {
+            "body": 46
+          },
+          "examples": [
+            "UN Tourism defines tourism as the activities of persons travelling to and staying in places outside their usual environment for not more than one consecutive ye...",
+            "Tourism is the industry that produces goods and services for people who travel."
+          ],
+          "word_count": {
+            "min": 8,
+            "median": 24,
+            "max": 37,
+            "samples": 46
+          }
+        }
+      }
+    },
+    "Testo + 1 Immagine": {
+      "name": "Testo + 1 Immagine",
+      "slides_using_this_layout": 46,
+      "title_placeholder_idx": [
+        0
+      ],
+      "heading_placeholder_idx": [
+        15
+      ],
+      "body_placeholder_idx": [
+        18
+      ],
+      "image_placeholder_idx": [],
+      "table_placeholder_idx": [],
+      "placeholders": {
+        "0": {
+          "idx": 0,
+          "role": "title",
+          "role_distribution": {
+            "title": 22
+          },
+          "examples": [
+            "Accommodation is divided into serviced accommodation (where meals are provided) and\nself-catering accommodation (where meals are not provided).\nAccommodations a...",
+            "Front desk staff duties at guest arrival:\nchecking details of the reservation;\nasking to submit in and sign a registration form;\nasking for the guest’s identity..."
+          ]
+        },
+        "15": {
+          "idx": 15,
+          "role": "heading",
+          "role_distribution": {
+            "heading": 24
+          },
+          "examples": [
+            "What is tourism?",
+            "Tourism until today"
+          ]
+        },
+        "18": {
+          "idx": 18,
+          "role": "body",
+          "role_distribution": {
+            "body": 24
+          },
+          "examples": [
+            "Domestic travel: travel within a country by residents.\n\nInbound travel: travel to a country by non-residents.\n\nOutbound travel: travel outside a country by resi...",
+            "Since the 1990s, travel has been transformed by the rise of budget airlines and online booking platforms. The COVID-19 pandemic halted global travel while growi..."
+          ],
+          "word_count": {
+            "min": 24,
+            "median": 39,
+            "max": 63,
+            "samples": 24
+          }
+        }
+      }
+    },
+    "1_Testo + 1 Immagine": {
+      "name": "1_Testo + 1 Immagine",
+      "slides_using_this_layout": 67,
+      "title_placeholder_idx": [
+        0
+      ],
+      "heading_placeholder_idx": [],
+      "body_placeholder_idx": [
+        15
+      ],
+      "image_placeholder_idx": [
+        16
+      ],
+      "table_placeholder_idx": [],
+      "placeholders": {
+        "0": {
+          "idx": 0,
+          "role": "title",
+          "role_distribution": {
+            "title": 38
+          },
+          "examples": [
+            "Half board includes breakfast and a meal, usually dinner.\nRoom only means the price covers just the accommodation.",
+            "Hotels can be classified according to their location, function and the types of service provided."
+          ]
+        },
+        "15": {
+          "idx": 15,
+          "role": "body",
+          "role_distribution": {
+            "body": 27
+          },
+          "examples": [
+            "People who can and want to spend their time and money visiting a new place generate tourism demand.",
+            "Tourism is traditionally divided into leisure and business but nowadays forms like bleisure (business + leisure) and workation (working while on vacation) are b..."
+          ],
+          "word_count": {
+            "min": 15,
+            "median": 27,
+            "max": 37,
+            "samples": 27
+          }
+        },
+        "16": {
+          "idx": 16,
+          "role": "image",
+          "role_distribution": {
+            "image": 29
+          },
+          "examples": []
+        }
+      }
+    },
+    "3 colonne Txt + Img": {
+      "name": "3 colonne Txt + Img",
+      "slides_using_this_layout": 78,
+      "title_placeholder_idx": [
+        0
+      ],
+      "heading_placeholder_idx": [
+        20
+      ],
+      "body_placeholder_idx": [
+        15,
+        17,
+        19
+      ],
+      "image_placeholder_idx": [
+        13,
+        16,
+        18
+      ],
+      "table_placeholder_idx": [],
+      "placeholders": {
+        "0": {
+          "idx": 0,
+          "role": "title",
+          "role_distribution": {
+            "title": 52
+          },
+          "examples": [
+            "Guest houses are usually larger than B&Bs and may offer additional amenities.",
+            "Non-simultaneous exchange: exchange partners come to stay\nin a vacation home while the owner continues to live in his/her primary home."
+          ]
+        },
+        "13": {
+          "idx": 13,
+          "role": "image",
+          "role_distribution": {
+            "image": 15
+          },
+          "examples": []
+        },
+        "15": {
+          "idx": 15,
+          "role": "body",
+          "role_distribution": {
+            "body": 14,
+            "heading": 1
+          },
+          "examples": [
+            "In prehistoric times people travelled as a necessity, to find food or better living conditions. Climate played a key role in these migrations.",
+            "From the end of the 15th century, an eagerness to create new colonies and trade routes was combined with the desire to learn about the world environment and abo..."
+          ],
+          "word_count": {
+            "min": 10,
+            "median": 24,
+            "max": 31,
+            "samples": 14
+          }
+        },
+        "16": {
+          "idx": 16,
+          "role": "image",
+          "role_distribution": {
+            "image": 15
+          },
+          "examples": []
+        },
+        "17": {
+          "idx": 17,
+          "role": "body",
+          "role_distribution": {
+            "body": 14,
+            "heading": 1
+          },
+          "examples": [
+            "In the Classical Era barbarian tribes, the Romans and the Greeks used to travel to conquer lands, people and new wealth. Some cultivated people used to travel t...",
+            "In the early 1800s wealthy people started to cultivate a passion for culture and the arts. The Grand Tour was created as a way to enjoy international cultural h..."
+          ],
+          "word_count": {
+            "min": 12,
+            "median": 27,
+            "max": 35,
+            "samples": 14
+          }
+        },
+        "18": {
+          "idx": 18,
+          "role": "image",
+          "role_distribution": {
+            "image": 15
+          },
+          "examples": []
+        },
+        "19": {
+          "idx": 19,
+          "role": "body",
+          "role_distribution": {
+            "body": 14,
+            "heading": 1
+          },
+          "examples": [
+            "In the Middle Ages people travelled for political, educational and commercial purposes. People of all classes often travelled to religious sites: these trips we...",
+            "After the Second World War, rail and air travel became more affordable and accessible, marking the beginning of mass tourism. Travelling for leisure became acce..."
+          ],
+          "word_count": {
+            "min": 11,
+            "median": 26,
+            "max": 33,
+            "samples": 14
+          }
+        },
+        "20": {
+          "idx": 20,
+          "role": "heading",
+          "role_distribution": {
+            "heading": 14,
+            "body": 1
+          },
+          "examples": [
+            "Tourism until today",
+            "Tourism until today"
+          ],
+          "word_count": {
+            "min": 10,
+            "median": 10,
+            "max": 10,
+            "samples": 1
+          }
+        }
+      }
+    },
+    "Tabella": {
+      "name": "Tabella",
+      "slides_using_this_layout": 34,
+      "title_placeholder_idx": [
+        0
+      ],
+      "heading_placeholder_idx": [
+        15
+      ],
+      "body_placeholder_idx": [],
+      "image_placeholder_idx": [],
+      "table_placeholder_idx": [
+        14
+      ],
+      "placeholders": {
+        "0": {
+          "idx": 0,
+          "role": "title",
+          "role_distribution": {
+            "title": 20
+          },
+          "examples": [
+            "Before you go",
+            "Before you go"
+          ]
+        },
+        "14": {
+          "idx": 14,
+          "role": "table",
+          "role_distribution": {
+            "table": 14
+          },
+          "examples": []
+        },
+        "15": {
+          "idx": 15,
+          "role": "heading",
+          "role_distribution": {
+            "heading": 14
+          },
+          "examples": [
+            "The 7 pillars of tourism",
+            "Responsible and sustainable tourism"
+          ]
+        }
+      }
+    }
+  },
+  "deck_grammar": {
+    "first_slide_layout": {
+      "Title Slide": 10
+    },
+    "observed_sequences": [
+      {
+        "unit": "U1",
+        "sequence": [
+          "Title Slide",
+          "Capitolo + Immagine",
+          "2_Testo + 1 Immagine",
+          "Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "3 colonne Txt + Img",
+          "Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "Capitolo + Immagine",
+          "2_Testo + 1 Immagine",
+          "Tabella",
+          "2_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "Testo + 1 Immagine",
+          "Testo + 1 Immagine"
+        ]
+      },
+      {
+        "unit": "U2",
+        "sequence": [
+          "Title Slide",
+          "Capitolo + Immagine",
+          "3 colonne Txt + Img",
+          "2_Testo + 1 Immagine",
+          "Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "Capitolo + Immagine",
+          "3 colonne Txt + Img",
+          "2_Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "Testo + 1 Immagine"
+        ]
+      },
+      {
+        "unit": "U3",
+        "sequence": [
+          "Title Slide",
+          "Capitolo + Immagine",
+          "Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "2_Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "3 colonne Txt + Img",
+          "2_Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "2_Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "2_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "3 colonne Txt + Img",
+          "2_Testo + 1 Immagine",
+          "Capitolo + Immagine",
+          "3 colonne Txt + Img",
+          "2_Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "3 colonne Txt + Img"
+        ]
+      },
+      {
+        "unit": "U4",
+        "sequence": [
+          "Title Slide",
+          "Capitolo + Immagine",
+          "3 colonne Txt + Img",
+          "2_Testo + 1 Immagine",
+          "Capitolo + Immagine",
+          "2_Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "Tabella",
+          "2_Testo + 1 Immagine",
+          "1_Testo + 1 Immagine"
+        ]
+      },
+      {
+        "unit": "U5",
+        "sequence": [
+          "Title Slide",
+          "Capitolo + Immagine",
+          "2_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "2_Testo + 1 Immagine",
+          "Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "Testo + 1 Immagine",
+          "Capitolo + Immagine",
+          "3 colonne Txt + Img",
+          "2_Testo + 1 Immagine",
+          "Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "3 colonne Txt + Img"
+        ]
+      },
+      {
+        "unit": "U6",
+        "sequence": [
+          "Title Slide",
+          "Capitolo + Immagine",
+          "2_Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "Capitolo + Immagine",
+          "Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "Tabella"
+        ]
+      },
+      {
+        "unit": "U7",
+        "sequence": [
+          "Title Slide",
+          "Capitolo + Immagine",
+          "2_Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "Testo + 1 Immagine",
+          "Capitolo + Immagine",
+          "2_Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "2_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "1_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "2_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "3 colonne Txt + Img",
+          "Capitolo + Immagine",
+          "2_Testo + 1 Immagine",
+          "Tabella",
+          "3 colonne Txt + Img",
+          "1_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "Tabella",
+          "3 colonne Txt + Img",
+          "1_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "1_Testo + 1 Immagine",
+          "Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "Tabella",
+          "3 colonne Txt + Img",
+          "1_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "1_Testo + 1 Immagine",
+          "Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "Tabella",
+          "3 colonne Txt + Img",
+          "1_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "Testo + 1 Immagine"
+        ]
+      },
+      {
+        "unit": "U8",
+        "sequence": [
+          "Title Slide",
+          "Capitolo + Immagine",
+          "2_Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "3 colonne Txt + Img",
+          "3 colonne Txt + Img",
+          "Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "Tabella",
+          "1_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "2_Testo + 1 Immagine",
+          "Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "3 colonne Txt + Img",
+          "Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "Tabella",
+          "Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "Tabella",
+          "1_Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "2_Testo + 1 Immagine",
+          "Tabella",
+          "Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "Capitolo + Immagine",
+          "2_Testo + 1 Immagine",
+          "Tabella",
+          "1_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "2_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "1_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "2_Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "2_Testo + 1 Immagine",
+          "Tabella",
+          "3 colonne Txt + Img",
+          "3 colonne Txt + Img",
+          "2_Testo + 1 Immagine",
+          "Tabella",
+          "1_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "1_Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "Tabella",
+          "3 colonne Txt + Img",
+          "3 colonne Txt + Img",
+          "Capitolo + Immagine",
+          "2_Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "3 colonne Txt + Img",
+          "3 colonne Txt + Img",
+          "Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "Tabella",
+          "1_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "2_Testo + 1 Immagine",
+          "Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "3 colonne Txt + Img",
+          "Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "Tabella",
+          "Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "Tabella",
+          "1_Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "2_Testo + 1 Immagine",
+          "Tabella",
+          "Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "Capitolo + Immagine",
+          "2_Testo + 1 Immagine",
+          "Tabella",
+          "1_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "2_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "1_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "2_Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "2_Testo + 1 Immagine",
+          "Tabella",
+          "3 colonne Txt + Img",
+          "3 colonne Txt + Img",
+          "2_Testo + 1 Immagine",
+          "Tabella",
+          "1_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "1_Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "Tabella",
+          "3 colonne Txt + Img",
+          "3 colonne Txt + Img"
+        ]
+      },
+      {
+        "unit": "U9",
+        "sequence": [
+          "Title Slide",
+          "Capitolo + Immagine",
+          "2_Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "Testo + 1 Immagine",
+          "Capitolo + Immagine",
+          "2_Testo + 1 Immagine",
+          "Tabella",
+          "1_Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "Tabella",
+          "1_Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "Tabella",
+          "2_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "1_Testo + 1 Immagine",
+          "Tabella",
+          "2_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "1_Testo + 1 Immagine",
+          "2_Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "Capitolo + Immagine",
+          "2_Testo + 1 Immagine",
+          "Tabella",
+          "1_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "3 colonne Txt + Img",
+          "3 colonne Txt + Img",
+          "3 colonne Txt + Img",
+          "2_Testo + 1 Immagine",
+          "Tabella",
+          "1_Testo + 1 Immagine",
+          "3 colonne Txt + Img",
+          "2_Testo + 1 Immagine",
+          "Testo + 1 Immagine",
+          "3 colonne Txt + Img"
+        ]
+      },
+      {
+        "unit": "U10",
+        "sequence": [
+          "Title Slide",
+          "Testo + 1 Immagine",
+          "Capitolo + Immagine",
+          "Testo + 1 Immagine",
+          "Tabella",
+          "2_Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "Capitolo + Immagine",
+          "Testo + 1 Immagine",
+          "Tabella",
+          "2_Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "Capitolo + Immagine",
+          "Testo + 1 Immagine",
+          "Tabella",
+          "2_Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "Capitolo + Immagine",
+          "Testo + 1 Immagine",
+          "Tabella",
+          "2_Testo + 1 Immagine",
+          "1_Testo + 1 Immagine",
+          "Capitolo + Immagine",
+          "Testo + 1 Immagine",
+          "Tabella",
+          "2_Testo + 1 Immagine",
+          "1_Testo + 1 Immagine"
+        ]
+      }
+    ],
+    "common_transitions": [
+      {
+        "from": "2_Testo + 1 Immagine",
+        "to": "1_Testo + 1 Immagine",
+        "count": 35
+      },
+      {
+        "from": "3 colonne Txt + Img",
+        "to": "2_Testo + 1 Immagine",
+        "count": 27
+      },
+      {
+        "from": "1_Testo + 1 Immagine",
+        "to": "2_Testo + 1 Immagine",
+        "count": 26
+      },
+      {
+        "from": "1_Testo + 1 Immagine",
+        "to": "3 colonne Txt + Img",
+        "count": 26
+      },
+      {
+        "from": "2_Testo + 1 Immagine",
+        "to": "Tabella",
+        "count": 26
+      },
+      {
+        "from": "Testo + 1 Immagine",
+        "to": "2_Testo + 1 Immagine",
+        "count": 20
+      },
+      {
+        "from": "3 colonne Txt + Img",
+        "to": "3 colonne Txt + Img",
+        "count": 18
+      },
+      {
+        "from": "2_Testo + 1 Immagine",
+        "to": "Testo + 1 Immagine",
+        "count": 16
+      },
+      {
+        "from": "Capitolo + Immagine",
+        "to": "2_Testo + 1 Immagine",
+        "count": 15
+      },
+      {
+        "from": "2_Testo + 1 Immagine",
+        "to": "3 colonne Txt + Img",
+        "count": 15
+      },
+      {
+        "from": "3 colonne Txt + Img",
+        "to": "1_Testo + 1 Immagine",
+        "count": 13
+      },
+      {
+        "from": "Tabella",
+        "to": "1_Testo + 1 Immagine",
+        "count": 12
+      },
+      {
+        "from": "3 colonne Txt + Img",
+        "to": "Testo + 1 Immagine",
+        "count": 11
+      },
+      {
+        "from": "Title Slide",
+        "to": "Capitolo + Immagine",
+        "count": 9
+      },
+      {
+        "from": "Tabella",
+        "to": "2_Testo + 1 Immagine",
+        "count": 9
+      },
+      {
+        "from": "Tabella",
+        "to": "3 colonne Txt + Img",
+        "count": 8
+      },
+      {
+        "from": "Capitolo + Immagine",
+        "to": "Testo + 1 Immagine",
+        "count": 7
+      },
+      {
+        "from": "Testo + 1 Immagine",
+        "to": "1_Testo + 1 Immagine",
+        "count": 7
+      },
+      {
+        "from": "Testo + 1 Immagine",
+        "to": "3 colonne Txt + Img",
+        "count": 6
+      },
+      {
+        "from": "1_Testo + 1 Immagine",
+        "to": "Testo + 1 Immagine",
+        "count": 6
+      }
+    ],
+    "rules_in_words": [
+      "Slide 1 is always the 'Title Slide' (ph0 = 'Unit N' + line break + unit topic).",
+      "Slide 2 is always 'Capitolo + Immagine' = the Step 1 divider (ph14 = 'Step 1' + line break + step title; ph13 empty picture).",
+      "Each STEP begins with a 'Capitolo + Immagine' divider slide; units have 2+ steps.",
+      "Content concept slides are '2_Testo + 1 Immagine' (heading ph15 + body ph18 + empty picture ph16).",
+      "When a concept overflows one slide it continues as '1_Testo + 1 Immagine' (caption TEXT_BOX repeats the concept name, body in ph15, picture ph16) or 'Testo + 1 Immagine' (heading ph15 + long body ph18, no picture).",
+      "Diagram / mind-map slides use '3 colonne Txt + Img' and are built from free AUTO_SHAPE boxes + connector LINES rather than text placeholders.",
+      "Comparison / data slides use 'Tabella' (heading ph15 + empty TABLE placeholder ph14/ph15 to be filled by hand)."
+    ]
+  },
+  "note_text_extraction": "Placeholder text uses \\n for both paragraph breaks and soft line breaks (<a:br>, originally \\x0b). Empty media placeholders (PICTURE/TABLE) are intentionally left blank in the source decks and filled by hand."
+}

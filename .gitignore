@@ -22,3 +22,7 @@ backend/.env
 # OS
 .DS_Store
 Thumbs.db
+
+# Training examples (heavy PDF/PPTX; derived JSON kept in backend/)
+training-examples/
+test-results/

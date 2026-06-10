@@ -1,0 +1,428 @@
+{
+  "examples": [
+    {
+      "unit": "U4",
+      "slides": [
+        {
+          "slide_number": 1,
+          "layout_name": "Title Slide",
+          "placeholders": {
+            "0": "Unit 4\nSustainable tourism"
+          }
+        },
+        {
+          "slide_number": 2,
+          "layout_name": "Capitolo + Immagine",
+          "placeholders": {
+            "14": "Step 1\nTourism and globalisation"
+          }
+        },
+        {
+          "slide_number": 3,
+          "layout_name": "3 colonne Txt + Img",
+          "placeholders": {},
+          "extra_shapes": [
+            "Globalisation",
+            "progress of transportation",
+            "awareness of new destinations and poverty",
+            "increasing world population",
+            "safety and security problems",
+            "impact on tourism:\n\ndestinations must cater to both multi-generational, culturally diverse travellers\nnew destinations that foster cultural exchange and economic growth"
+          ]
+        },
+        {
+          "slide_number": 4,
+          "layout_name": "2_Testo + 1 Immagine",
+          "placeholders": {
+            "15": "The social impact of tourism",
+            "18": "Tourism can influence values, individual behaviour, relationships, lifestyles and moral conduct, with both positive and negative impacts."
+          }
+        },
+        {
+          "slide_number": 5,
+          "layout_name": "Capitolo + Immagine",
+          "placeholders": {
+            "14": "Step 2\nGreen tourism"
+          }
+        },
+        {
+          "slide_number": 6,
+          "layout_name": "2_Testo + 1 Immagine",
+          "placeholders": {
+            "15": "Sustainability",
+            "18": "Sustainability in today’s tourism industry means developing destinations while supporting economic growth and protecting natural and cultural resources."
+          }
+        },
+        {
+          "slide_number": 7,
+          "layout_name": "1_Testo + 1 Immagine",
+          "placeholders": {
+            "15": "A more recent and ambitious concept is regenerative tourism, which goes beyond minimising negative impacts.\nIt aims to actively improve\nthe destination and its environment through tourism."
+          },
+          "extra_shapes": [
+            "Sustainability"
+          ]
+        },
+        {
+          "slide_number": 8,
+          "layout_name": "2_Testo + 1 Immagine",
+          "placeholders": {
+            "15": "Responsible and sustainable tourism",
+            "18": "Responsible and sustainable tourism aim to encourage a positive economic, social, and environmental impact on host destinations."
+          }
+        },
+        {
+          "slide_number": 9,
+          "layout_name": "1_Testo + 1 Immagine",
+          "placeholders": {
+            "15": "Responsible tourism depends on individuals, while sustainable tourism refers to the actions taken by governments."
+          },
+          "extra_shapes": [
+            "Responsible and sustainable tourism"
+          ]
+        },
+        {
+          "slide_number": 10,
+          "layout_name": "Tabella",
+          "placeholders": {
+            "15": "Responsible and sustainable tourism"
+          }
+        },
+        {
+          "slide_number": 11,
+          "layout_name": "2_Testo + 1 Immagine",
+          "placeholders": {
+            "15": "Ecotourism",
+            "18": "Ecotourism is a form of tourism that happens when tourists visit secluded and almost unspoilt natural areas for their unique appeal."
+          }
+        },
+        {
+          "slide_number": 12,
+          "layout_name": "1_Testo + 1 Immagine",
+          "placeholders": {
+            "15": "Ecotourists visit natural areas which they respect and do not alter, while at the same time they try to improve the quality of life of the locals."
+          },
+          "extra_shapes": [
+            "Ecotourism"
+          ]
+        }
+      ]
+    },
+    {
+      "unit": "U5",
+      "slides": [
+        {
+          "slide_number": 1,
+          "layout_name": "Title Slide",
+          "placeholders": {
+            "0": "Unit 5\nTourism marketing"
+          }
+        },
+        {
+          "slide_number": 2,
+          "layout_name": "Capitolo + Immagine",
+          "placeholders": {
+            "14": "Step 1\nMarketing essentials"
+          }
+        },
+        {
+          "slide_number": 3,
+          "layout_name": "2_Testo + 1 Immagine",
+          "placeholders": {
+            "15": "What is marketing?",
+            "18": "Marketing involves a variety of decisions. The vision describes the desired future position of the company, while the mission defines the company’s objectives. In marketing determining the right sales strategies is essential."
+          }
+        },
+        {
+          "slide_number": 4,
+          "layout_name": "3 colonne Txt + Img",
+          "placeholders": {},
+          "extra_shapes": [
+            "Marketing",
+            "marketing research",
+            "niche marketing",
+            "identifying customer requirements\nanticipating customer needs",
+            "market segmentation",
+            "mass marketing",
+            "target marketing / positioning",
+            "satisfied customer",
+            "profit"
+          ]
+        },
+        {
+          "slide_number": 5,
+          "layout_name": "2_Testo + 1 Immagine",
+          "placeholders": {
+            "15": "Market research",
+            "18": "The process of collecting, analysing and interpreting information about a product or service to be offered for sale in a market, and about the past, present and potential future customers."
+          }
+        },
+        {
+          "slide_number": 6,
+          "layout_name": "Testo + 1 Immagine",
+          "placeholders": {
+            "15": "Market research",
+            "18": "Collecting information:\ninternal sources: the information comes from data collected within the company;\nexternal sources: the information comes from data collected outside the company."
+          }
+        },
+        {
+          "slide_number": 7,
+          "layout_name": "2_Testo + 1 Immagine",
+          "placeholders": {
+            "15": "Market research",
+            "18": "Analysing and interpreting information:\nquantitative research techniques aim to measure the topic objectively using mathematics and statistics;"
+          }
+        },
+        {
+          "slide_number": 8,
+          "layout_name": "1_Testo + 1 Immagine",
+          "placeholders": {
+            "15": "qualitative research techniques instead include focus groups, interviews, observation, and the analysis of online reviews and social media comments."
+          },
+          "extra_shapes": [
+            "Market research"
+          ]
+        },
+        {
+          "slide_number": 9,
+          "layout_name": "2_Testo + 1 Immagine",
+          "placeholders": {
+            "15": "Market segmentation",
+            "18": "Dividing potential customers into groups, based on specific characteristics.\nMarket segmentation enables marketing campaigns and strategies to be more targeted and personalised."
+          }
+        },
+        {
+          "slide_number": 10,
+          "layout_name": "1_Testo + 1 Immagine",
+          "placeholders": {
+            "15": "In order to find the right segments, companies apply these evaluation criteria:\nmarket segment size (number of consumers);\ngrowth potential\n(sales volume and expected profitability);"
+          },
+          "extra_shapes": [
+            "Target market"
+          ]
+        },
+        {
+          "slide_number": 11,
+          "layout_name": "Testo + 1 Immagine",
+          "placeholders": {
+            "15": "Target market",
+            "18": "the market players (competitors, similar products);\naccessibility (whether they can effectively reach and serve the segment);\nactionability (whether they can create, effective marketing campaigns for that segment);\ncompatibility (how well the segment aligns with their goals, values, and capabilities)."
+          }
+        },
+        {
+          "slide_number": 12,
+          "layout_name": "2_Testo + 1 Immagine",
+          "placeholders": {
+            "15": "Target market",
+            "18": "Companies can choose from these marketing strategies:\nundifferentiated or mass marketing: it targets the whole market with just one offer."
+          }
+        },
+        {
+          "slide_number": 13,
+          "layout_name": "Testo + 1 Immagine",
+          "placeholders": {
+            "15": "Target market",
+            "18": "differentiated marketing: it targets several segments with different offers for each segment.\nniche marketing: it targets one or a few small segments with a high potential for profitability.\nhyper-targeting or one-to-one marketing:\nit tailors offers to individual consumers."
+          }
+        },
+        {
+          "slide_number": 14,
+          "layout_name": "Capitolo + Immagine",
+          "placeholders": {
+            "14": "Step 2\nMarketing strategies"
+          }
+        },
+        {
+          "slide_number": 15,
+          "layout_name": "3 colonne Txt + Img",
+          "placeholders": {},
+          "extra_shapes": [
+            "SWOT analysis",
+            "takes into consideration",
+            "internal business environment",
+            "external business environment",
+            "strengths",
+            "weaknesses",
+            "threats",
+            "opportunities"
+          ]
+        },
+        {
+          "slide_number": 16,
+          "layout_name": "2_Testo + 1 Immagine",
+          "placeholders": {
+            "15": "Marketing mix",
+            "18": "The traditional marketing mix refers to sales of tangible goods and it contains the 4 Ps:\nProduct: the first and more important step of the marketing process."
+          }
+        },
+        {
+          "slide_number": 17,
+          "layout_name": "Testo + 1 Immagine",
+          "placeholders": {
+            "15": "Marketing mix",
+            "18": "Place: Visibility on tools and social media platforms\nis crucial.\nPrice: products must be priced according to demand and value.\nPromotion: it requires a variety of advertising techniques and marketing campaigns."
+          }
+        },
+        {
+          "slide_number": 18,
+          "layout_name": "3 colonne Txt + Img",
+          "placeholders": {
+            "15": "People: investing in the right employees is fundamental. Digital interactions also play a crucial role.",
+            "17": "Process: The way a service is delivered is essential. Digital solutions greatly improve user experience.",
+            "19": "Physical evidence: customers need to see what they are buying. Case studies, testimonials and feedback provide evidence of a reliable company.",
+            "20": "The marketing mix for services and experiences: 3 extra Ps"
+          }
+        },
+        {
+          "slide_number": 19,
+          "layout_name": "3 colonne Txt + Img",
+          "placeholders": {},
+          "extra_shapes": [
+            "Tourism promotion",
+            "advertising",
+            "trade fairs",
+            "digital promotion",
+            "sales promotion",
+            "public relations",
+            "personal selling"
+          ]
+        }
+      ]
+    },
+    {
+      "unit": "U6",
+      "slides": [
+        {
+          "slide_number": 1,
+          "layout_name": "Title Slide",
+          "placeholders": {
+            "0": "Unit 6\nJobs in tourism"
+          }
+        },
+        {
+          "slide_number": 2,
+          "layout_name": "Capitolo + Immagine",
+          "placeholders": {
+            "14": "Step 1\nCareers\nand jobs"
+          }
+        },
+        {
+          "slide_number": 3,
+          "layout_name": "2_Testo + 1 Immagine",
+          "placeholders": {
+            "15": "Travel agent",
+            "18": "Travel agents use specialised software and online tools to create personalised itineraries that go far beyond what most customers can find on their own."
+          }
+        },
+        {
+          "slide_number": 4,
+          "layout_name": "1_Testo + 1 Immagine",
+          "placeholders": {
+            "15": "Working in a travel agency is a sales job, but what is on sale is not an object, but a service."
+          },
+          "extra_shapes": [
+            "Travel agent"
+          ]
+        },
+        {
+          "slide_number": 5,
+          "layout_name": "Testo + 1 Immagine",
+          "placeholders": {
+            "15": "Tourist office employee",
+            "18": "Tourist information centres provide advice and practical support to tourists about an area. The aim is to promote awareness of the region’s artistic, natural, and cultural heritage as supported by policymakers and public authorities."
+          }
+        },
+        {
+          "slide_number": 6,
+          "layout_name": "2_Testo + 1 Immagine",
+          "placeholders": {
+            "15": "Museum guide",
+            "18": "Museum guides provide a hospitable environment and a rewarding learning experience through guided tours.\nGuides need to have good general knowledge of history, art and architecture."
+          }
+        },
+        {
+          "slide_number": 7,
+          "layout_name": "Testo + 1 Immagine",
+          "placeholders": {
+            "15": "Destination manager",
+            "18": "A destination manager, or DM, works for a DMO (destination management organisation) to improve a destination’s appeal and competitiveness by coordinating efforts among local stakeholders, promoting sustainable tourism, and enhancing the visitor experience."
+          }
+        },
+        {
+          "slide_number": 8,
+          "layout_name": "2_Testo + 1 Immagine",
+          "placeholders": {
+            "15": "Travel influencer",
+            "18": "A travel influencer, or content creator, talks about tourism on their platforms.\nBy working with brands and tourism boards, they help attract more visitors and shape travel trends."
+          }
+        },
+        {
+          "slide_number": 9,
+          "layout_name": "Capitolo + Immagine",
+          "placeholders": {
+            "14": "Step 2\nJob search"
+          }
+        },
+        {
+          "slide_number": 10,
+          "layout_name": "Testo + 1 Immagine",
+          "placeholders": {
+            "15": "Job search",
+            "18": "When you apply for a job, you should take these steps:\nlook for interesting job advertisements;\nwrite a CV and a cover letter;\nfill in an application form;\ntrain for a job interview."
+          }
+        },
+        {
+          "slide_number": 11,
+          "layout_name": "1_Testo + 1 Immagine",
+          "placeholders": {
+            "15": "Nowadays, the Internet is probably the most common resource for job hunting.\nStart by creating and updating your profile on professional networking sites."
+          },
+          "extra_shapes": [
+            "Job search"
+          ]
+        },
+        {
+          "slide_number": 12,
+          "layout_name": "2_Testo + 1 Immagine",
+          "placeholders": {
+            "15": "The CV",
+            "18": "There are two main types of CV (curriculum vitae):\nchronological, or traditional;\nskills based, or functional.\nA common template in Europe is the Europass CV."
+          }
+        },
+        {
+          "slide_number": 13,
+          "layout_name": "Testo + 1 Immagine",
+          "placeholders": {
+            "15": "Cover letter",
+            "18": "A cover letter, or application letter, is the letter or email that accompanies CVs or résumés. It should provide\na clear, concise, and more personal introduction, explaining why you are applying for the position,\nwhat attracts you to the company, and how your skills and experience make you a good fit."
+          }
+        },
+        {
+          "slide_number": 14,
+          "layout_name": "1_Testo + 1 Immagine",
+          "placeholders": {
+            "15": "A job interview is the moment you present and talk about the content of your CV and explain why you would be the best candidate for the position."
+          },
+          "extra_shapes": [
+            "The job interview"
+          ]
+        },
+        {
+          "slide_number": 15,
+          "layout_name": "2_Testo + 1 Immagine",
+          "placeholders": {
+            "15": "The job interview",
+            "18": "The interviewer is usually a human resources manager, a personnel manager, or a panel of experts."
+          }
+        },
+        {
+          "slide_number": 16,
+          "layout_name": "Tabella",
+          "placeholders": {
+            "15": "Skills for the Future of Tourism"
+          }
+        }
+      ]
+    }
+  ]
+}
