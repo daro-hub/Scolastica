@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { Onborda, OnbordaProvider, type OnbordaProps, type CardComponentProps } from 'onborda'
 import { useAppStore } from '@/store/useAppStore'
 import { Button } from '@/components/ui/button'
@@ -54,16 +55,6 @@ const tourSteps: OnbordaProps['steps'] = [
         title: 'Scegli le varianti',
         content: 'Per ogni sezione vedrai 5 proposte diverse. Clicca su quella che preferisci per selezionarla.',
         selector: '#variant-selector',
-        side: 'bottom',
-        showControls: true,
-        pointerPadding: 10,
-        pointerRadius: 12,
-      },
-      {
-        icon: <>🖼️</>,
-        title: 'Cerca immagini',
-        content: 'Usa la ricerca integrata per trovare immagini perfette per il tuo contenuto.',
-        selector: '#image-search-button',
         side: 'bottom',
         showControls: true,
         pointerPadding: 10,
@@ -133,7 +124,17 @@ function TourCard({
 }
 
 export function OnboardingTour({ children }: { children: React.ReactNode }) {
-  const { isFirstVisit } = useAppStore()
+  const { isFirstVisit, setIsFirstVisit } = useAppStore()
+
+  // Deferred to after mount on purpose: the store's initial state is
+  // always `true` (see useAppStore.ts) so it matches the static export's
+  // server-rendered HTML. Only once hydration is done do we read
+  // localStorage and possibly flip it to false for a returning visitor.
+  useEffect(() => {
+    if (localStorage.getItem('scolastica_visited') === 'true') {
+      setIsFirstVisit(false)
+    }
+  }, [setIsFirstVisit])
 
   return (
     <OnbordaProvider>

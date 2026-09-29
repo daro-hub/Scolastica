@@ -138,6 +138,34 @@ async def track_usage(image_id: str, project_id: str, price: float) -> dict:
     }
 
 
+async def download_web_image(url: str, output_dir: str) -> str:
+    """Download an image the operator picked from a search result's direct URL.
+
+    Unlike Getty (which requires a separate OAuth-signed /downloads call
+    to get a real file URL), Unsplash's search response already contains
+    one — search_free_images's "download_url" — so this just fetches it.
+    Works for any http(s) URL, but is only ever called with a URL that
+    came from our own search_images response, never a client-supplied one.
+    """
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    async with httpx.AsyncClient(timeout=30, follow_redirects=True) as client:
+        resp = await client.get(url)
+        resp.raise_for_status()
+
+    content_type = resp.headers.get("content-type", "")
+    ext = ".jpg"
+    if "png" in content_type:
+        ext = ".png"
+    elif "webp" in content_type:
+        ext = ".webp"
+
+    file_path = output_path / f"{uuid.uuid4().hex[:12]}{ext}"
+    file_path.write_bytes(resp.content)
+    return str(file_path)
+
+
 async def search_free_images(
     query: str,
     page: int = 1,

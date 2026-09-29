@@ -1,8 +1,14 @@
 """
 PowerPoint generation service.
 
-Replaces the Gamma API approach with a local pipeline:
-master analysis → content extraction → variant generation via Claude (Bedrock) → PPTX assembly.
+master analysis -> content extraction -> plan prompt (filled in by
+pipeline/steps.py, which calls the LLM and validates the result against
+pipeline/schema.py) -> PPTX assembly -> PNG rendering for the operator's
+visual selection.
+
+The LLM call itself, plus JSON parsing/validation, now lives in
+llm/__init__.py and pipeline/ — this module only builds the prompt and
+does PPTX/PDF mechanics (python-pptx, PyMuPDF, LibreOffice).
 """
 
 from __future__ import annotations
@@ -15,29 +21,10 @@ from pathlib import Path
 from typing import Any
 
 import fitz
-import httpx
 from pptx import Presentation
-from pptx.util import Inches, Pt, Emu
-from pptx.enum.shapes import MSO_SHAPE_TYPE, PP_PLACEHOLDER
+from pptx.enum.shapes import PP_PLACEHOLDER
 
-
-# --- LLM Configuration: Bedrock (primary) or Anthropic API (fallback) ---
-
-BEDROCK_AWS_ACCESS_KEY_ID = os.environ.get("BEDROCK_AWS_ACCESS_KEY_ID", "")
-BEDROCK_AWS_SECRET_ACCESS_KEY = os.environ.get("BEDROCK_AWS_SECRET_ACCESS_KEY", "")
-BEDROCK_AWS_REGION = os.environ.get("BEDROCK_AWS_REGION", "eu-west-1")
-BEDROCK_INFERENCE_PREFIX = os.environ.get("BEDROCK_INFERENCE_PREFIX", "eu")
-BEDROCK_MODEL = os.environ.get(
-    "BEDROCK_MODEL",
-    f"{BEDROCK_INFERENCE_PREFIX}.anthropic.claude-opus-4-6-v1"
-)
-
-USE_BEDROCK = bool(BEDROCK_AWS_ACCESS_KEY_ID and BEDROCK_AWS_SECRET_ACCESS_KEY)
-
-ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
-ANTHROPIC_MODEL = "claude-sonnet-4-20250514"
-ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
-ANTHROPIC_VERSION = "2023-06-01"
+from config import LIBREOFFICE_PATH
 
 _PLACEHOLDER_TYPE_MAP = {
     PP_PLACEHOLDER.TITLE: "title",
@@ -56,16 +43,8 @@ _PLACEHOLDER_TYPE_MAP = {
 def analyze_master(master_pptx_path: str) -> dict:
     """Load a master .pptx template and extract its layout capabilities.
 
-    Args:
-        master_pptx_path: Absolute or relative path to the master PPTX file.
-
-    Returns:
-        A dict with key ``layouts``, each entry describing the layout name,
-        index, and its placeholders (idx, type, dimensions).
-
-    Raises:
-        FileNotFoundError: If the template file does not exist.
-        ValueError: If the file cannot be parsed as a valid PPTX.
+    Returns a dict with key ``layouts``, each entry describing the layout
+    name, index, and its placeholders (idx, type, dimensions).
     """
     path = Path(master_pptx_path)
     if not path.exists():
@@ -126,23 +105,10 @@ def _resolve_placeholder_type(ph) -> str:
 def extract_content(pdf_path: str) -> dict:
     """Extract text and images from a PDF with correct reading order.
 
-    Produces clean per-page text (column-aware) plus document-level font stats.
-    The semantic classification (theory vs exercise) is delegated to the LLM,
-    which is far more robust than font heuristics for educational PDFs.
-
-    Args:
-        pdf_path: Path to the source PDF.
-
-    Returns:
-        A dict with:
-          - ``pages``: list of dicts, each with ``page``, ``text`` (reading-ordered)
-          - ``full_text``: concatenated clean text across pages
-          - ``images``: list of dicts with ``path``, ``page``, ``index``, dimensions
-          - ``tmp_dir``: temp dir holding extracted images
-
-    Raises:
-        FileNotFoundError: If the PDF does not exist.
-        RuntimeError: If PyMuPDF cannot open the file.
+    Produces clean per-page text (column-aware) plus a concatenated
+    ``full_text``. The semantic classification (theory vs exercise) is
+    delegated to the LLM, which is far more robust than font heuristics
+    for educational PDFs.
     """
     path = Path(pdf_path)
     if not path.exists():
@@ -250,20 +216,30 @@ def _extract_block_text(block: dict) -> str:
     return "\n".join(lines_out)
 
 
+def _load_json_with_local_override(base: Path, name: str) -> dict:
+    """Load `{name}.local.json` if present, else the tracked `{name}.json`.
+
+    The tracked file ships a structurally-identical but fully synthetic
+    stand-in (see backend/*.local.json in .gitignore) — the real
+    publisher's textbook excerpts used to be committed directly in
+    layout_rules.json/fewshot_examples.json, which is client content that
+    shouldn't sit in a public repo. Dropping the real file in as
+    `{name}.local.json` locally still gets it picked up and used.
+    """
+    for candidate in (base / f"{name}.local.json", base / f"{name}.json"):
+        try:
+            with open(candidate, encoding="utf-8") as f:
+                return json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            continue
+    return {}
+
+
 def _load_reference_data() -> tuple[dict, dict]:
     """Load the layout rules and few-shot examples derived from real operator decks."""
     base = Path(__file__).parent.parent
-    rules, fewshot = {}, {}
-    try:
-        with open(base / "layout_rules.json", encoding="utf-8") as f:
-            rules = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        pass
-    try:
-        with open(base / "fewshot_examples.json", encoding="utf-8") as f:
-            fewshot = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        pass
+    rules = _load_json_with_local_override(base, "layout_rules")
+    fewshot = _load_json_with_local_override(base, "fewshot_examples")
     return rules, fewshot
 
 
@@ -313,28 +289,17 @@ def _build_fewshot_block(fewshot: dict, max_examples: int = 2) -> str:
     return "\n\n".join(blocks)
 
 
-async def generate_variants(
+def build_plan_prompt(
     content: dict,
     master_layouts: dict | None,
     num_variants: int = 2,
     custom_prompt: str | None = None,
-) -> list[dict[str, Any]]:
-    """Generate a slide deck plan from PDF content, mimicking the expert operator.
+) -> str:
+    """Build the prompt asking the LLM for a slide deck plan from PDF content.
 
-    Produces, per content section/slide, ``num_variants`` layout alternatives.
-    Follows the real operator grammar learned from training examples:
-    keep only theory (discard exercises/audio/tests), rewrite concisely,
-    use the 7 known layouts with the correct deck structure.
-
-    Returns:
-        List of section objects, each with a ``variants`` list.
+    Pure function (no network call) so it's unit-testable and reusable for
+    the repair round-trip in pipeline/steps.py.
     """
-    if not USE_BEDROCK and not ANTHROPIC_API_KEY:
-        raise EnvironmentError(
-            "No LLM credentials configured. Set BEDROCK_AWS_ACCESS_KEY_ID + "
-            "BEDROCK_AWS_SECRET_ACCESS_KEY (preferred) or ANTHROPIC_API_KEY."
-        )
-
     rules, fewshot = _load_reference_data()
     layout_guide = _build_layout_guide(master_layouts, rules)
     fewshot_block = _build_fewshot_block(fewshot)
@@ -360,7 +325,7 @@ async def generate_variants(
 
 1. SELECTION - This is critical. The PDF is a student workbook full of exercises, audio/vlog prompts, fill-in-the-gap tasks, true/false grids, "CRITICAL THINKING", "IN PAIRS", self-tests, vocabulary-match activities. The operator DISCARDS all of these. He keeps ONLY the THEORY: the declarative subject-matter content (definitions, classifications, processes, concepts) found in the reading boxes and numbered sub-sections.
 
-2. REWRITE - The kept theory is REWRITTEN concisely: remove subordinate clauses, examples, hedging. Turn long passages into short declarative sentences. Lists become one short line per item. Target 8-40 words per slide body. NEVER copy the exercise instructions.
+2. REWRITE - The kept theory is REWRITTEN concisely, BUT you must reuse the source's own vocabulary and phrasing as much as possible instead of paraphrasing into new wording — this deck is a study aid meant to quote the textbook, not summarize it in your own words. Remove subordinate clauses, examples, hedging. Turn long passages into short declarative sentences built mostly from words that appear in the source. Lists become one short line per item. Target 8-40 words per slide body. NEVER copy the exercise instructions, and NEVER add a fact, number or claim that isn't in the source text below.
 
 3. STRUCTURE (deck grammar) - The deck ALWAYS follows this skeleton:
    - Slide 1: "Title Slide" -> idx 0 = "Unit N\\n<Theme>" (theme from the unit opener page)
@@ -413,123 +378,7 @@ Each variant's placeholder_fills must use the EXACT placeholder idx for that lay
     if custom_prompt:
         user_message += f"\n\n## ADDITIONAL OPERATOR INSTRUCTIONS\n{custom_prompt}"
 
-    assistant_text = await _call_llm(user_message, max_tokens=32000)
-
-    try:
-        variants = json.loads(assistant_text)
-    except json.JSONDecodeError as exc:
-        cleaned = _attempt_json_extraction(assistant_text)
-        if cleaned is None:
-            raise RuntimeError(
-                f"Claude returned invalid JSON. First 500 chars: {assistant_text[:500]}"
-            ) from exc
-        variants = cleaned
-
-    return variants
-
-
-async def _call_llm(prompt: str, max_tokens: int = 8192) -> str:
-    """Route LLM call to Bedrock (preferred) or Anthropic API (fallback)."""
-    if USE_BEDROCK:
-        return await _call_bedrock(prompt, max_tokens)
-    return await _call_anthropic_api(prompt, max_tokens)
-
-
-async def _call_bedrock(prompt: str, max_tokens: int) -> str:
-    """Call Claude via Amazon Bedrock using boto3."""
-    import boto3
-    from botocore.config import Config as BotoConfig
-
-    # Re-read env at call time to support hot-reload
-    region = os.environ.get("BEDROCK_AWS_REGION", "eu-west-1")
-    access_key = os.environ.get("BEDROCK_AWS_ACCESS_KEY_ID", "")
-    secret_key = os.environ.get("BEDROCK_AWS_SECRET_ACCESS_KEY", "")
-    prefix = os.environ.get("BEDROCK_INFERENCE_PREFIX", "eu")
-    model_id = os.environ.get("BEDROCK_MODEL", f"{prefix}.anthropic.claude-sonnet-4-6")
-
-    boto_config = BotoConfig(
-        read_timeout=300,
-        connect_timeout=10,
-        retries={"max_attempts": 1},
-    )
-
-    client = boto3.client(
-        "bedrock-runtime",
-        region_name=region,
-        aws_access_key_id=access_key,
-        aws_secret_access_key=secret_key,
-        config=boto_config,
-    )
-
-    body = json.dumps({
-        "anthropic_version": "bedrock-2023-05-31",
-        "max_tokens": max_tokens,
-        "temperature": 0.1,
-        "messages": [{"role": "user", "content": [{"type": "text", "text": prompt}]}],
-    })
-
-    try:
-        response = client.invoke_model(
-            modelId=model_id,
-            contentType="application/json",
-            accept="application/json",
-            body=body,
-        )
-    except Exception as exc:
-        raise RuntimeError(f"Bedrock API call failed: {exc}") from exc
-
-    response_body = json.loads(response["body"].read())
-    return response_body["content"][0]["text"]
-
-
-async def _call_anthropic_api(prompt: str, max_tokens: int) -> str:
-    """Call Claude via direct Anthropic API (fallback if Bedrock not configured)."""
-    payload = {
-        "model": ANTHROPIC_MODEL,
-        "max_tokens": max_tokens,
-        "messages": [{"role": "user", "content": prompt}],
-    }
-    headers = {
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": ANTHROPIC_VERSION,
-        "content-type": "application/json",
-    }
-
-    try:
-        async with httpx.AsyncClient(timeout=120.0) as client:
-            response = await client.post(ANTHROPIC_API_URL, json=payload, headers=headers)
-            response.raise_for_status()
-    except httpx.HTTPStatusError as exc:
-        raise RuntimeError(
-            f"Anthropic API returned {exc.response.status_code}: "
-            f"{exc.response.text[:500]}"
-        ) from exc
-    except httpx.RequestError as exc:
-        raise RuntimeError(f"Anthropic API request failed: {exc}") from exc
-
-    response_data = response.json()
-    return response_data["content"][0]["text"]
-
-
-def _default_layouts() -> list[dict]:
-    """Fallback layout descriptions when no master template is provided."""
-    return [
-        {"index": 0, "name": "Title Slide", "placeholders": [
-            {"idx": 0, "type": "title"}, {"idx": 1, "type": "subtitle"}
-        ]},
-        {"index": 1, "name": "Title and Content", "placeholders": [
-            {"idx": 0, "type": "title"}, {"idx": 1, "type": "body"}
-        ]},
-        {"index": 2, "name": "Two Content", "placeholders": [
-            {"idx": 0, "type": "title"}, {"idx": 1, "type": "body"}, {"idx": 2, "type": "body"}
-        ]},
-        {"index": 3, "name": "Title and Picture", "placeholders": [
-            {"idx": 0, "type": "title"}, {"idx": 1, "type": "body"}, {"idx": 10, "type": "picture"}
-        ]},
-        {"index": 4, "name": "Blank with Image", "placeholders": [
-            {"idx": 10, "type": "picture"}, {"idx": 1, "type": "body"}
-        ]},
-    ]
+    return user_message
 
 
 def _attempt_json_extraction(text: str):
@@ -564,62 +413,6 @@ def _attempt_json_extraction(text: str):
     return None
 
 
-def build_pptx(
-    master_path: str,
-    selected_variants: list[dict[str, Any]],
-    images: dict[str, str] | None = None,
-    output_path: str | None = None,
-) -> str:
-    """Assemble the final PPTX from a master template and selected variants.
-
-    Args:
-        master_path: Path to the master .pptx template.
-        selected_variants: List of variant dicts (one per section), each specifying
-            ``layout_index`` and ``placeholder_fills``.
-        images: Optional mapping of placeholder idx (as string) to local image path.
-            Overrides image suggestions with actual files.
-        output_path: Where to save the result. If None, saves to a temp file.
-
-    Returns:
-        Absolute path to the generated PPTX file.
-
-    Raises:
-        FileNotFoundError: If master template or referenced images don't exist.
-        ValueError: If a layout_index references a non-existent layout.
-    """
-    master = Path(master_path)
-    if not master.exists():
-        raise FileNotFoundError(f"Master template not found: {master_path}")
-
-    prs = Presentation(str(master))
-    images = images or {}
-
-    for variant in selected_variants:
-        layout_index = variant.get("layout_index", 0)
-        if layout_index >= len(prs.slide_layouts):
-            raise ValueError(
-                f"Layout index {layout_index} out of range "
-                f"(template has {len(prs.slide_layouts)} layouts)"
-            )
-
-        layout = prs.slide_layouts[layout_index]
-        slide = prs.slides.add_slide(layout)
-
-        fills = variant.get("placeholder_fills", {})
-        for idx_str, fill_data in fills.items():
-            idx = int(idx_str)
-            _apply_fill(slide, idx, fill_data, images)
-
-    if output_path is None:
-        output_path = os.path.join(
-            tempfile.gettempdir(),
-            f"presentation_{uuid.uuid4().hex[:12]}.pptx",
-        )
-
-    prs.save(output_path)
-    return os.path.abspath(output_path)
-
-
 def _apply_fill(
     slide,
     placeholder_idx: int,
@@ -649,7 +442,7 @@ def _apply_fill(
         if img_path and Path(img_path).exists():
             try:
                 ph.insert_picture(open(img_path, "rb"))
-            except (AttributeError, Exception):
+            except Exception:
                 try:
                     slide.shapes.add_picture(img_path, ph.left, ph.top, ph.width, ph.height)
                 except Exception:
@@ -663,6 +456,17 @@ def _apply_fill(
             _insert_table(slide, ph, rows_data)
         elif content:
             _set_multiparagraph_text(ph, content)
+
+
+def apply_image_selection(prs: Presentation, slide_index: int, placeholder_idx: int, image_path: str) -> None:
+    """Insert a downloaded image into an already-built slide's placeholder.
+
+    Used by build_final_from_selections to turn the operator's Unsplash
+    pick into a real picture in the final PPTX, instead of the image
+    placeholder staying empty (which is all the pipeline did before).
+    """
+    slide = prs.slides[slide_index]
+    _apply_fill(slide, placeholder_idx, {"type": "image", "local_path": image_path}, {})
 
 
 def _set_multiparagraph_text(ph, content: str) -> None:
@@ -711,14 +515,6 @@ def _insert_table(slide, placeholder, rows: list[list[str]]) -> None:
                 table.cell(r_idx, c_idx).text = str(cell_text)
 
 
-# --- Approach C: Generate all slides as images for visual selection ---
-
-LIBREOFFICE_PATH = os.environ.get(
-    "LIBREOFFICE_PATH",
-    "/Applications/LibreOffice.app/Contents/MacOS/soffice"
-)
-
-
 def build_all_variants_pptx(
     master_path: str,
     variants_data: list[dict[str, Any]],
@@ -764,7 +560,7 @@ def build_all_variants_pptx(
 def pptx_to_pngs(pptx_path: str, output_dir: str, dpi: int = 150) -> list[str]:
     """Convert a PPTX to individual PNG images per slide.
 
-    Uses LibreOffice headless for PPTX→PDF, then PyMuPDF for PDF→PNG.
+    Uses LibreOffice headless for PPTX->PDF, then PyMuPDF for PDF->PNG.
     Returns list of PNG file paths in slide order.
     """
     os.makedirs(output_dir, exist_ok=True)
@@ -832,67 +628,11 @@ def _pptx_to_pdf(pptx_path: str, output_dir: str) -> str:
     return pdf_path
 
 
-async def generate_variants_with_thumbnails(
-    content: dict,
-    master_path: str,
-    master_layouts: dict | None,
-    num_variants: int = 2,
-    custom_prompt: str | None = None,
-    output_dir: str | None = None,
-) -> dict[str, Any]:
-    """Full pipeline: generate variants via Claude, build all slides, render to PNG.
-
-    Returns a dict with:
-    - generation_pptx_path: path to PPTX with all variant slides
-    - sections: list of section dicts with thumbnail paths
-    """
-    variants_data = await generate_variants(
-        content=content,
-        master_layouts=master_layouts,
-        num_variants=num_variants,
-        custom_prompt=custom_prompt,
-    )
-
-    all_pptx_path = build_all_variants_pptx(master_path, variants_data)
-
-    if output_dir is None:
-        output_dir = os.path.join(tempfile.gettempdir(), f"thumbs_{uuid.uuid4().hex[:8]}")
-
-    png_paths = pptx_to_pngs(all_pptx_path, output_dir)
-
-    sections_result = []
-    slide_idx = 0
-
-    for section in variants_data:
-        section_variants = []
-        for v_idx, variant in enumerate(section.get("variants", [])):
-            if slide_idx < len(png_paths):
-                section_variants.append({
-                    "variant_index": v_idx,
-                    "slide_index": slide_idx,
-                    "layout_index": variant.get("layout_index", 0),
-                    "layout_name": variant.get("layout_name", ""),
-                    "design_rationale": variant.get("design_rationale", ""),
-                    "thumbnail_path": png_paths[slide_idx],
-                })
-                slide_idx += 1
-
-        sections_result.append({
-            "section_index": section.get("section_index", 0),
-            "heading": section.get("heading", ""),
-            "variants": section_variants,
-        })
-
-    return {
-        "generation_pptx_path": all_pptx_path,
-        "sections": sections_result,
-    }
-
-
 def build_final_from_selections(
     all_variants_pptx_path: str,
     selections: dict[int, int],
     sections_data: list[dict],
+    image_selections: dict[str, str] | None = None,
     output_path: str | None = None,
 ) -> str:
     """Build final PPTX by extracting only selected slides from the all-variants PPTX.
@@ -900,30 +640,42 @@ def build_final_from_selections(
     Args:
         all_variants_pptx_path: Path to PPTX with all variant slides.
         selections: Mapping section_index -> variant_index (which variant was chosen).
-        sections_data: The sections list from generate_variants_with_thumbnails.
+        sections_data: The sections list from the render step (includes
+            placeholder_fills and image_placeholder_idx per variant).
+        image_selections: Mapping "{section_index}:{placeholder_idx}" -> local
+            path of a downloaded image to insert into that slide's image
+            placeholder (see services/getty_service.download_web_image).
         output_path: Where to save. If None, uses a temp file.
 
     Returns:
         Path to the final PPTX.
     """
-    from copy import deepcopy
-    from pptx.opc.constants import RELATIONSHIP_TYPE as RT
-
     prs = Presentation(all_variants_pptx_path)
 
-    selected_slide_indices = set()
+    selected_variant_by_section: dict[int, dict] = {}
     for section in sections_data:
         s_idx = section["section_index"]
         chosen_v = selections.get(s_idx, 0)
         for variant in section["variants"]:
             if variant["variant_index"] == chosen_v:
-                selected_slide_indices.add(variant["slide_index"])
+                selected_variant_by_section[s_idx] = variant
                 break
 
-    slides_to_remove = []
-    for i in range(len(prs.slides)):
-        if i not in selected_slide_indices:
-            slides_to_remove.append(i)
+    # Insert real images BEFORE removing any slides: slide_index values are
+    # positions in the still-complete all-variants deck, and deleting
+    # slides renumbers everything after the deleted index.
+    if image_selections:
+        for s_idx, variant in selected_variant_by_section.items():
+            img_idx = variant.get("image_placeholder_idx")
+            if img_idx is None:
+                continue
+            local_path = image_selections.get(f"{s_idx}:{img_idx}")
+            if local_path:
+                apply_image_selection(prs, variant["slide_index"], img_idx, local_path)
+
+    selected_slide_indices = {v["slide_index"] for v in selected_variant_by_section.values()}
+
+    slides_to_remove = [i for i in range(len(prs.slides)) if i not in selected_slide_indices]
 
     for idx in sorted(slides_to_remove, reverse=True):
         rId = prs.slides._sldIdLst[idx].rId

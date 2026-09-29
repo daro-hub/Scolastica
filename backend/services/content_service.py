@@ -5,12 +5,12 @@ Uses Claude (Anthropic) for AI-powered content generation from uploaded files.
 Converts PDF pages to images and sends them to Claude for analysis.
 Outputs styled HTML files that open formatted in any browser.
 """
-import os
 import base64
 import httpx
 from pathlib import Path
 
-ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY', '')
+from config import ANTHROPIC_API_KEY, ANTHROPIC_MODEL
+
 ANTHROPIC_BASE_URL = 'https://api.anthropic.com/v1'
 
 HTML_TEMPLATE = '''<!DOCTYPE html>
@@ -385,7 +385,7 @@ Each image is a page from a PDF document."""
     })
     
     payload = {
-        'model': 'claude-sonnet-4-20250514',
+        'model': ANTHROPIC_MODEL,
         'max_tokens': 8000,
         'system': system_prompt,
         'messages': [

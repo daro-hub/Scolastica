@@ -1,18 +1,30 @@
-import { createClient } from '@supabase/supabase-js'
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || ''
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' ? '' : 'http://localhost:8000')
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-
-export const supabase = supabaseUrl
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null
+/**
+ * Every backend-relative path (thumbnail URLs, download URLs) goes
+ * through this so there's exactly one place that decides the API's
+ * origin. Before this existed, page.tsx had its own hardcoded
+ * `http://localhost:8000` fallback for the download link while
+ * VariantSelector's thumbnails used a separate `apiBase=""` prop passed
+ * down from the same page — two different fallbacks for the same
+ * problem, out of sync with each other and wrong for any deploy where
+ * NEXT_PUBLIC_API_URL isn't set to something reachable from the browser.
+ */
+export function resolveApiUrl(path: string): string {
+  if (!path) return path
+  if (/^https?:\/\//i.test(path)) return path
+  return `${API_BASE}${path}`
+}
 
 function getAuthHeaders(): Record<string, string> {
   if (typeof window === 'undefined') return {}
   const pw = sessionStorage.getItem('scolastica_password') || ''
   return pw ? { 'x-app-password': pw } : {}
+}
+
+async function parseErrorDetail(response: Response, fallback: string): Promise<string> {
+  const error = await response.json().catch(() => ({ detail: fallback }))
+  return error.detail || fallback
 }
 
 export async function uploadFiles(
@@ -25,15 +37,14 @@ export async function uploadFiles(
     formData.append('files', masterFile)
   }
 
-  const response = await fetch(`${API_BASE}/upload`, {
+  const response = await fetch(resolveApiUrl('/upload'), {
     method: 'POST',
     headers: { ...getAuthHeaders() },
     body: formData,
   })
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Errore durante il caricamento dei file' }))
-    throw new Error(error.detail || 'Errore durante il caricamento dei file')
+    throw new Error(await parseErrorDetail(response, 'Errore durante il caricamento dei file'))
   }
 
   const data = await response.json()
@@ -49,7 +60,7 @@ export async function createProject(
   name: string,
   masterFileId?: string
 ): Promise<{ projectId: string; masterLayouts: unknown }> {
-  const response = await fetch(`${API_BASE}/v2/projects`, {
+  const response = await fetch(resolveApiUrl('/v2/projects'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify({
@@ -59,8 +70,7 @@ export async function createProject(
   })
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Errore nella creazione del progetto' }))
-    throw new Error(error.detail || 'Errore nella creazione del progetto')
+    throw new Error(await parseErrorDetail(response, 'Errore nella creazione del progetto'))
   }
 
   const data = await response.json()
@@ -70,12 +80,20 @@ export async function createProject(
   }
 }
 
+export interface GroundingInfo {
+  score: number
+  grounded: boolean
+  flagged_idx: string[]
+}
+
 export interface SlideVariant {
   variant_index: number
   slide_index: number
   layout_name: string
   design_rationale: string
   thumbnail_url: string
+  image_placeholder_idx: number | string | null
+  grounding: GroundingInfo | null
 }
 
 export interface SlideSection {
@@ -84,12 +102,9 @@ export interface SlideSection {
   variants: SlideVariant[]
 }
 
-export interface GenerationResult {
+export interface StartGenerationResult {
   generationId: string
-  status: 'variants_ready' | 'completed' | 'failed'
-  sections?: SlideSection[]
-  output?: { id: string; filename: string; extension: string }
-  error?: string
+  status: string
 }
 
 export async function startGeneration(
@@ -97,8 +112,8 @@ export async function startGeneration(
   taskType: string,
   sourceFileIds: string[],
   prompt?: string
-): Promise<GenerationResult> {
-  const response = await fetch(`${API_BASE}/v2/projects/${projectId}/generate`, {
+): Promise<StartGenerationResult> {
+  const response = await fetch(resolveApiUrl(`/v2/projects/${projectId}/generate`), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify({
@@ -110,39 +125,67 @@ export async function startGeneration(
   })
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Errore nell\'avvio della generazione' }))
-    throw new Error(error.detail || 'Errore nell\'avvio della generazione')
+    throw new Error(await parseErrorDetail(response, "Errore nell'avvio della generazione"))
+  }
+
+  const data = await response.json()
+  return { generationId: data.generation_id, status: data.status }
+}
+
+export interface GenerationPollResult {
+  generationId: string
+  status: 'queued' | 'processing' | 'extracting' | 'planning' | 'grounding' | 'rendering' | 'variants_ready' | 'building' | 'completed' | 'failed'
+  step: string | null
+  percent: number
+  error: string | null
+  sections?: SlideSection[]
+  outputUrl?: string
+}
+
+/** Polls GET /v2/generations/{id} — this endpoint didn't used to exist:
+ * the whole pipeline ran inline in the generate request and the
+ * frontend just displayed made-up progress percentages while waiting. */
+export async function pollGeneration(generationId: string): Promise<GenerationPollResult> {
+  const response = await fetch(resolveApiUrl(`/v2/generations/${generationId}`), {
+    headers: { ...getAuthHeaders() },
+  })
+
+  if (!response.ok) {
+    throw new Error(await parseErrorDetail(response, 'Errore nel recupero dello stato della generazione'))
   }
 
   const data = await response.json()
   return {
     generationId: data.generation_id,
     status: data.status,
-    sections: data.sections,
-    output: data.output,
+    step: data.step,
+    percent: data.percent ?? 0,
     error: data.error,
+    sections: data.sections,
+    outputUrl: data.output_url,
   }
 }
 
 export async function buildFinal(
   generationId: string,
+  variantSelections: Record<string, number>,
   imageSelections?: Record<string, string>
 ): Promise<string> {
-  const response = await fetch(`${API_BASE}/v2/generations/${generationId}/build`, {
+  const response = await fetch(resolveApiUrl(`/v2/generations/${generationId}/build`), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify({
+      variant_selections: variantSelections,
       image_selections: imageSelections || undefined,
     }),
   })
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Errore nella creazione del file finale' }))
-    throw new Error(error.detail || 'Errore nella creazione del file finale')
+    throw new Error(await parseErrorDetail(response, 'Errore nella creazione del file finale'))
   }
 
   const data = await response.json()
-  return data.output_url || `${API_BASE}/download/${data.generation_id}`
+  return resolveApiUrl(data.output_url)
 }
 
 export interface ImageSearchResult {
@@ -163,21 +206,20 @@ export async function searchImages(
     page_size: '20',
   })
 
-  const response = await fetch(`${API_BASE}/v2/images/search?${params}`, {
+  const response = await fetch(resolveApiUrl(`/v2/images/search?${params}`), {
     headers: { ...getAuthHeaders() },
   })
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Errore nella ricerca immagini' }))
-    throw new Error(error.detail || 'Errore nella ricerca immagini')
+    throw new Error(await parseErrorDetail(response, 'Errore nella ricerca immagini'))
   }
 
   const data = await response.json()
 
   const results: ImageSearchResult[] = (data.images || []).map((img: Record<string, unknown>) => ({
     id: img.id as string,
-    url: (img.preview_url || img.url) as string,
-    thumbnailUrl: (img.thumbnail_url || img.preview_url || img.url) as string,
+    url: (img.download_url || img.preview_url || img.url) as string,
+    thumbnailUrl: (img.preview_url || img.url) as string,
     description: (img.title || img.description || '') as string,
     source: (img.source || 'unsplash') as string,
   }))

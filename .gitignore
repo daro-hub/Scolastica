@@ -7,9 +7,16 @@ backend/outputs/
 *.pyc
 
 # Node
+node_modules/
 frontend/node_modules/
 frontend/.next/
 frontend/out/
+e2e/fixtures/*.pdf
+e2e/fixtures/*.pptx
+
+# SQLite (local job store)
+backend/data/*.db
+backend/data/*.db-journal
 
 # Environment
 .env
@@ -23,6 +30,9 @@ backend/.env
 .DS_Store
 Thumbs.db
 
-# Training examples (heavy PDF/PPTX; derived JSON kept in backend/)
+# Training examples (heavy PDF/PPTX; the derived JSON with real textbook
+# excerpts is *.local.json, kept out of the public repo — backend/*.json
+# without the .local suffix is a synthetic stand-in, tracked normally)
 training-examples/
+backend/*.local.json
 test-results/

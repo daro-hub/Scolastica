@@ -6,7 +6,6 @@ import {
   Music4,
   HelpCircle,
   LayoutGrid,
-  Map,
   MousePointerClick,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -55,13 +54,6 @@ const tasks: Array<{
     label: 'Padlet',
     description: 'Crea schede riassuntive per bacheca digitale',
     icon: <LayoutGrid className="w-6 h-6" />,
-  },
-  {
-    type: 'maps',
-    label: 'Mappe',
-    description: 'Genera mappe concettuali interattive',
-    icon: <Map className="w-6 h-6" />,
-    badge: 'Beta',
   },
   {
     type: 'thinglink',

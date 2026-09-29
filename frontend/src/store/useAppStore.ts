@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { SlideSection } from '@/lib/api'
+import type { ImageSearchResult, SlideSection } from '@/lib/api'
 
 export type TaskType =
   | 'presentations'
@@ -7,7 +7,6 @@ export type TaskType =
   | 'karaoke'
   | 'quiz'
   | 'padlet'
-  | 'maps'
   | 'thinglink'
 
 export type GenerationStatus =
@@ -29,6 +28,10 @@ interface AppStore {
   generationId: string | null
   sections: SlideSection[]
   selectedVariants: Record<number, number>
+  // Keyed by `${sectionIndex}:${placeholderIdx}` — a section's chosen
+  // variant may have more than one image placeholder in principle, so
+  // the key can't be just the section index.
+  imageSelections: Record<string, ImageSearchResult>
   outputUrl: string | null
   isFirstVisit: boolean
   error: string | null
@@ -43,6 +46,7 @@ interface AppStore {
   setGenerationId: (id: string | null) => void
   setSections: (sections: SlideSection[]) => void
   selectVariant: (sectionIndex: number, variantIndex: number) => void
+  setImageSelection: (sectionIndex: number, placeholderIdx: number, image: ImageSearchResult) => void
   setOutputUrl: (url: string | null) => void
   setIsFirstVisit: (value: boolean) => void
   setError: (error: string | null) => void
@@ -60,10 +64,16 @@ const initialState = {
   generationId: null as string | null,
   sections: [] as SlideSection[],
   selectedVariants: {} as Record<number, number>,
+  imageSelections: {} as Record<string, ImageSearchResult>,
   outputUrl: null as string | null,
-  isFirstVisit: typeof window !== 'undefined'
-    ? localStorage.getItem('scolastica_visited') !== 'true'
-    : true,
+  // Always true here, matching what the static export's server-rendered
+  // HTML sees (no `window`). Reading localStorage at module-eval time
+  // used to give the client a different value than the pre-rendered
+  // HTML for any returning visitor, which is a hydration mismatch — the
+  // same AMUSEAPP-WEBAPP-8 pattern (state read from localStorage/
+  // sessionStorage/matchMedia outside a useEffect). OnboardingTour
+  // corrects this after mount, in a useEffect, once hydration is done.
+  isFirstVisit: true,
   error: null as string | null,
   progress: { percent: 0, message: '' },
 }
@@ -82,6 +92,10 @@ export const useAppStore = create<AppStore>((set) => ({
   selectVariant: (sectionIndex, variantIndex) =>
     set((state) => ({
       selectedVariants: { ...state.selectedVariants, [sectionIndex]: variantIndex },
+    })),
+  setImageSelection: (sectionIndex, placeholderIdx, image) =>
+    set((state) => ({
+      imageSelections: { ...state.imageSelections, [`${sectionIndex}:${placeholderIdx}`]: image },
     })),
   setOutputUrl: (outputUrl) => set({ outputUrl }),
   setIsFirstVisit: (isFirstVisit) => {
