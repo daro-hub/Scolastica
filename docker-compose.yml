@@ -1,0 +1,21 @@
+# docker compose up --build   ->  http://localhost:8000  (API + the built frontend)
+# Try it without any LLM credentials:  FAKE_LLM=1 docker compose up --build
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      FAKE_LLM: ${FAKE_LLM:-}
+    env_file:
+      - path: backend/.env
+        required: false      # needs Docker Compose >= 2.24
+    volumes:
+      - data:/app/data         # SQLite job store survives restarts
+      - uploads:/app/uploads
+      - outputs:/app/outputs
+
+volumes:
+  data:
+  uploads:
+  outputs:

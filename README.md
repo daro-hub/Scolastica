@@ -82,6 +82,19 @@ A trading-idea-style loop ("write, test, learn, revise") doesn't apply here, but
 - Node.js >= 18
 - LibreOffice (headless) — used to render slide previews to PNG. Set `LIBREOFFICE_PATH` if it's not at the default location assumed for your OS.
 
+## Run with Docker
+
+The repo ships a `Dockerfile` (it also runs on Railway): it builds the frontend, installs LibreOffice for slide rendering, and serves API and UI from one FastAPI process.
+
+```bash
+cp backend/.env.example backend/.env    # add a Bedrock or Anthropic key to generate for real
+docker compose up --build               # http://localhost:8000
+# no credentials? try the whole flow with a fake plan:
+FAKE_LLM=1 docker compose up --build
+```
+
+The SQLite job store, uploads and outputs live in named volumes, so jobs survive a restart. (The compose file was written but not built on my machine; the `Dockerfile` itself is the one that runs in production.)
+
 ## Local setup
 
 ### 1. Backend
